@@ -2,8 +2,7 @@
 #include "CSV.hpp"
 #include "global.hpp"
 
-const static std::string base_path("/mnt/c/Users/wangzhankun/Desktop/"
-                                   "huawei/data/");
+const static std::string base_path("/data/");
 
 const static char *file_names[] = {
     "config.ini",
