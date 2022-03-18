@@ -16,7 +16,6 @@
 #include <windows.h>
 #endif
 
-#include <filesystem>
 #include <sstream>
 #include <stddef.h>
 #include <string>
@@ -486,6 +485,17 @@ namespace MyUtils
             std::function<void()> cb = [task]()
             { task(); };
             return cb;
+        }
+
+        static inline int sum_column(const std::vector<std::vector<int>> &vec,
+                                     const int &column)
+        {
+            int sum = 0;
+            for (auto &v : vec)
+            {
+                sum += v[column];
+            }
+            return sum;
         }
     };
 

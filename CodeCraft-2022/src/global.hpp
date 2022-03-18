@@ -5,7 +5,6 @@
 #include <map>
 #include <algorithm>
 
-
 typedef struct _SITE_BANDWIDTH
 {
     std::vector<std::string> site_name;
@@ -19,11 +18,11 @@ typedef struct _DEMAND
 
     /**
      * @brief 获取对应mtime的demand的索引
-     * 
-     * @param time 
-     * @return int 
+     *
+     * @param time
+     * @return int
      */
-    int get(const std::string& time)
+    int get(const std::string &time)
     {
         auto p = std::find(mtime.begin(), mtime.end(), time);
         if (p == mtime.end())
@@ -41,13 +40,18 @@ typedef struct _QOS
 {
     std::vector<std::string> client_name;
     std::vector<std::string> site_name;
-    std::vector<std::vector<int>> qos;//举例qos[0]数组表示边缘节点与各个客户端的网络时延。
+    std::vector<std::vector<int>> qos; //举例qos[0]数组表示边缘节点与各个客户端的网络时延。
 } QOS;
 
-// typedef struct _
+typedef struct _ANSWER
+{
+    std::string mtime;                  //时刻某个时刻的分配方案
+    std::vector<std::vector<int>> flow; //行是客户，列是边缘节点
+
+    std::vector<int> sum_flow_site; //各列的流量之和，也即是边缘节点分配给各个客户端的流量的总和
+} ANSWER;
 
 extern int g_qos_constraint;
-
 
 extern DEMAND g_demand;
 
