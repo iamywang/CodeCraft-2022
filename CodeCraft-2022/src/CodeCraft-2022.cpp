@@ -3,7 +3,7 @@
 #include "global.hpp"
 #include "DataIn.hpp"
 
-
+extern int solve();
 int main()
 {
     g_qos_constraint = read_qos_constraint();
@@ -13,6 +13,8 @@ int main()
     read_qos(g_qos);
 
     read_site_bandwidth(g_site_bandwidth);
+
+    solve();
 
     return 0;
 }

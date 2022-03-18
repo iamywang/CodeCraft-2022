@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <map>
+#include <algorithm>
 
 
 typedef struct _SITE_BANDWIDTH
@@ -14,6 +16,25 @@ typedef struct _DEMAND
 {
     std::vector<std::string> mtime;
     std::vector<std::vector<int>> demand;
+
+    /**
+     * @brief 获取对应mtime的demand的索引
+     * 
+     * @param time 
+     * @return int 
+     */
+    int get(const std::string& time)
+    {
+        auto p = std::find(mtime.begin(), mtime.end(), time);
+        if (p == mtime.end())
+        {
+            return -1;
+        }
+        else
+        {
+            return p - mtime.begin();
+        }
+    }
 } DEMAND;
 
 typedef struct _QOS
