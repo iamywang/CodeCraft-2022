@@ -8,13 +8,6 @@
 
 using namespace std;
 
-typedef struct _SERVER_SUPPORTED_FLOW
-{
-    string mtime;
-    int max_flow;
-    int server_index;
-} SERVER_SUPPORTED_FLOW;
-
 typedef struct _MAX_5_PERCENT_FLOW
 {
     // max priority queue
@@ -26,7 +19,7 @@ static vector<MAX_5_PERCENT_FLOW> max_5_percent_flow_vec; //边缘节点对应�
 /**
  * @brief
  *
- * @param [out] server_supported_flow 边缘节点在各个时刻可提供的最大流量
+ * @param [out] server_supported_flow 边缘节点在各个时刻可提供的最大流量。每一行都是每个时刻各个边缘节点可以为当前所有客户端提供的最大流量。
  */
 void sort_by_demand_and_qos(vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_time_vec)
 {
@@ -193,62 +186,8 @@ void solve_X(vector<int> demand, // copy一份
     return;
 }
 
-void optimize_X(vector<ANSWER> &X_results)
-{
-    for (auto &X : X_results)
-    {
-        for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-        {
-            X.sum_flow_site.push_back(MyUtils::Tools::sum_column(X.flow, site_id));
-        }
-    }
-}
-
-bool verify(const vector<ANSWER> &X_results)
-{
-    for (const auto &X : X_results)
-    {
-        const auto &flow = X.flow;
-
-        for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-            if (X.sum_flow_site[site_id] > g_site_bandwidth.bandwidth[site_id])
-            {
-                cout << X.mtime << " client " << site_id << " flow " << X.sum_flow_site[site_id] << " > " << g_site_bandwidth.bandwidth[site_id] << endl;
-                return false;
-            }
-
-        for (int client_id = 0; client_id < flow.size(); client_id++)
-        {
-            for (int j = 0; j < flow[client_id].size(); j++)
-            {
-                if (flow[client_id][j] && g_qos.qos[j][client_id] <= 0)
-                {
-                    cout << X.mtime << " client " << g_qos.client_name[client_id] << " server " << g_qos.site_name[j] << endl;
-                    return false;
-                }
-            }
-            int sum = std::accumulate(flow[client_id].begin(), flow[client_id].end(), 0); //客户的流量总和
-            if (sum != g_demand.demand[g_demand.get(X.mtime)][client_id])
-            {
-                cout << X.mtime << " " << client_id << " " << sum << " " << g_demand.demand[g_demand.get(X.mtime)][client_id] << endl;
-                cout << "sum is not equal demand" << endl;
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-/**
- * @brief 根据时刻对X_results进行排序
- *
- * @param X_results
- */
-void resort(vector<ANSWER> &X_results)
-{
-    std::sort(X_results.begin(), X_results.end(), [](const ANSWER &a, const ANSWER &b)
-              { return g_demand.get(a.mtime) < g_demand.get(b.mtime); });
-}
+extern void optimize(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_time_vec, vector<ANSWER> &X_results);
+extern bool verify(const vector<ANSWER> &X_results);
 
 int solve(std::vector<ANSWER> &X_results)
 {
@@ -291,16 +230,23 @@ int solve(std::vector<ANSWER> &X_results)
         }
     }
 
-    resort(X_results);
-    for (const auto &X : X_results)
+    //根据时间对X_results进行排序
+    std::sort(X_results.begin(), X_results.end(), [](const ANSWER &a, const ANSWER &b)
+              { return g_demand.get(a.mtime) < g_demand.get(b.mtime); });
+    // //根据时间对server_supported_flow_2_time_vec排序
+    std::sort(server_supported_flow_2_time_vec.begin(), server_supported_flow_2_time_vec.end(), [](const vector<SERVER_SUPPORTED_FLOW> &a, const vector<SERVER_SUPPORTED_FLOW> &b)
+              { return g_demand.get(a[0].mtime) < g_demand.get(b[0].mtime); });
+    for(auto& v : server_supported_flow_2_time_vec)
     {
-        // cout << X.mtime << " " << X.sum_flow_site[0] << " " << X.sum_flow_site[1] << endl;
+        //按照server_id排序
+        std::sort(v.begin(), v.end(), [](const SERVER_SUPPORTED_FLOW &a, const SERVER_SUPPORTED_FLOW &b)
+                  { return a.server_index < b.server_index; });
     }
+    optimize(server_supported_flow_2_time_vec, X_results);
 
     if (verify(X_results))
     {
         cout << "verify success" << endl;
-        
     }
 
     else
@@ -308,8 +254,6 @@ int solve(std::vector<ANSWER> &X_results)
         printf("verify failed\n");
         return -1;
     }
-
-    optimize_X(X_results);
 
     return 0;
 }

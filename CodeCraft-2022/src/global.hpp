@@ -15,7 +15,9 @@ typedef struct _DEMAND
 {
     std::vector<std::string> mtime;
     std::vector<std::vector<int>> demand;
-
+private:
+    std::map<std::string, int> mtime_2_id;
+public:
     /**
      * @brief 获取对应mtime的demand的索引
      *
@@ -24,16 +26,26 @@ typedef struct _DEMAND
      */
     int get(const std::string &time)
     {
-        auto p = std::find(mtime.begin(), mtime.end(), time);
-        if (p == mtime.end())
+        if(mtime_2_id.empty())
         {
-            return -1;
+            for(int i = 0; i < mtime.size(); i++)
+            {
+                mtime_2_id[mtime[i]] = i;
+            }
         }
-        else
-        {
-            return p - mtime.begin();
-        }
+        return mtime_2_id[time];
+        // auto p = std::find(mtime.begin(), mtime.end(), time);
+        // if (p == mtime.end())
+        // {
+        //     return -1;
+        // }
+        // else
+        // {
+        //     return p - mtime.begin();
+        // }
     }
+
+    
 } DEMAND;
 
 typedef struct _QOS
@@ -49,7 +61,15 @@ typedef struct _ANSWER
     std::vector<std::vector<int>> flow; //行是客户，列是边缘节点
 
     std::vector<int> sum_flow_site; //各列的流量之和，也即是边缘节点分配给各个客户端的流量的总和
+
 } ANSWER;
+
+typedef struct _SERVER_SUPPORTED_FLOW
+{
+    std::string mtime;
+    int max_flow;
+    int server_index;
+} SERVER_SUPPORTED_FLOW;
 
 extern int g_qos_constraint;
 
