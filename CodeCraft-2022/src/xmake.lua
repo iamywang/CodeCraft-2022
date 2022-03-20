@@ -1,13 +1,13 @@
 set_languages("cxx11")
 add_cxxflags("-Wall -pedantic")
 
-includes("src")
+includes("utils")
+includes("data_in_out")
+includes("optimize")
+
 
 target("CodeCraft-2021")
     set_kind("binary")
     set_rules("mode.debug", "mode.release")
-    -- add_files("src/*.cpp")
-    set_optimize("fastest")
-    if(is_mode("debug")) then
-        add_defines("TEST")
-    end
+    add_files("*.cpp")
+    -- set_optimize("fastest")

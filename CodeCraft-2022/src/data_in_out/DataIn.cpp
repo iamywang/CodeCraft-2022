@@ -1,6 +1,6 @@
 #include "DataIn.hpp"
 #include "CSV.hpp"
-#include "global.hpp"
+#include "../global.hpp"
 
 // const static std::string base_path("/data/data_1/");
 const static std::string base_path("/data/");

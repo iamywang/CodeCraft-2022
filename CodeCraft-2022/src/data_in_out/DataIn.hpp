@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tools.hpp"
-#include "global.hpp"
+#include "../utils/utils.hpp"
+#include "../global.hpp"
 
 int read_qos_constraint();
 

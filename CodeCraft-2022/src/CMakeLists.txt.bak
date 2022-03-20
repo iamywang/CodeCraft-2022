@@ -21,17 +21,6 @@ SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall -std=c++11")
 # 查找当前目录下的所有源文件
 # 并将名称保存到 DIR_LIB_SRCS 变量
 aux_source_directory(. DIR_SRCS)
-#aux_source_directory(../utils UTILS_SRCS)
-#aux_source_directory(../data_in_out DATA_IN_OUT_SRCS)
-
-add_subdirectory(utils)
-add_subdirectory(data_in_out)
-add_subdirectory(optimize)
-
 
 # 指定生成目标
-# add_executable(CodeCraft-2022 ${DIR_SRCS} ${UTILS_SRCS} ${DATA_IN_OUT_SRCS})
-add_executable(CodeCraft-2022 ${DIR_SRCS} )
-
-
-target_link_libraries(CodeCraft-2022 utils data_in_out optimize)
+add_executable(CodeCraft-2022 ${DIR_SRCS})

@@ -1,8 +1,8 @@
 #include <iostream>
-#include "tools.hpp"
+#include "utils/tools.hpp"
 #include "global.hpp"
-#include "DataIn.hpp"
-#include "ProcessTimer.hpp"
+#include "data_in_out/DataIn.hpp"
+#include "utils/ProcessTimer.hpp"
 extern int solve(std::vector<ANSWER> &X_results);
 extern void write_result(const std::vector<ANSWER> &X_results);
 

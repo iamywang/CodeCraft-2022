@@ -1,13 +1,15 @@
-#include "global.hpp"
-#include "tools.hpp"
+#include "../global.hpp"
+#include "../utils/tools.hpp"
 #include <queue>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <numeric>
-#include "ProcessTimer.hpp"
-#include "utils.hpp"
+#include "../utils/ProcessTimer.hpp"
+#include "../utils/utils.hpp"
 using namespace std;
+
+// #define SET_LOW_LIMIT
 
 typedef struct _SERVER_FLOW
 {
@@ -228,6 +230,7 @@ bool dispath2(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow
         // printf("%d\n", sum);
     }
 
+#ifdef SET_LOW_LIMIT
     vector<int> flows_vec_low_limit_according_site_id;
 
     {
@@ -237,6 +240,7 @@ bool dispath2(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow
                                         tmp,
                                         flows_vec_low_limit_according_site_id);
     }
+#endif
 
     for (int id_min_quantile = 0; id_min_quantile < flows_vec_quantile.size(); id_min_quantile++)
     // for (int id_min_quantile = flows_vec_quantile.size() - 1; id_min_quantile >= 0; id_min_quantile--)//无法进行优化
@@ -246,13 +250,15 @@ bool dispath2(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow
         ANSWER &X = X_results[min_quantile_server_flow.ans_id];
         const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = server_supported_flow_2_site_id_vec[min_quantile_server_flow.ans_id];
 
-        // ret = update_X2(X,
-        //                 flows_vec_95_according_site_id,
-        //                 flows_vec_low_limit_according_site_id,
-        //                 server_supported_flow,
-        //                 min_quantile_server_flow);
-
+#ifdef SET_LOW_LIMIT
+        ret = update_X2(X,
+                        flows_vec_95_according_site_id,
+                        flows_vec_low_limit_according_site_id,
+                        server_supported_flow,
+                        min_quantile_server_flow);
+#else
         ret = update_X(X, flows_vec_95_according_site_id, server_supported_flow, min_quantile_server_flow);
+#endif
     }
     return ret;
 }
@@ -271,6 +277,7 @@ bool dispath(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_
                                     flows_vec_95_percent,
                                     flows_vec_95_according_site_id);
 
+#ifdef SET_LOW_LIMIT
     vector<int> flows_vec_low_limit_according_site_id;
 
     {
@@ -280,10 +287,13 @@ bool dispath(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_
                                         tmp,
                                         flows_vec_low_limit_according_site_id);
     }
+#endif
 
     {
+#ifdef TEST
         int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
         printf("%d\n", sum);
+#endif
     }
 
     for (int id_max_95 = flows_vec_95_percent.size() - 1; id_max_95 >= 0; id_max_95--)
@@ -293,17 +303,19 @@ bool dispath(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_
         ANSWER &X = X_results[max_95_server_flow.ans_id];
         const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = server_supported_flow_2_site_id_vec[max_95_server_flow.ans_id];
 
-        // ret = update_X2(X,
-        //                 flows_vec_95_according_site_id,
-        //                 flows_vec_low_limit_according_site_id,
-        //                 server_supported_flow,
-        //                 max_95_server_flow);
-
-        ret = update_X(X,
+#ifdef SET_LOW_LIMIT
+        ret = update_X2(X,
                         flows_vec_95_according_site_id,
-                        // flows_vec_low_limit_according_site_id,
+                        flows_vec_low_limit_according_site_id,
                         server_supported_flow,
                         max_95_server_flow);
+#else
+        ret = update_X(X,
+                       flows_vec_95_according_site_id,
+                       // flows_vec_low_limit_according_site_id,
+                       server_supported_flow,
+                       max_95_server_flow);
+#endif
     }
 
     return ret;

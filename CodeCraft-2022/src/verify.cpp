@@ -1,9 +1,9 @@
 #include "global.hpp"
-#include "tools.hpp"
+#include "./utils/tools.hpp"
 #include <iostream>
 #include <numeric>
 #include <cmath>
-#include "utils.hpp"
+#include "./utils/utils.hpp"
 
 using namespace std;
 

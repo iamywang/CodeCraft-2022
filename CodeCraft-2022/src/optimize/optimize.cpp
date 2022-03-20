@@ -1,12 +1,12 @@
-#include "global.hpp"
-#include "tools.hpp"
+#include "../global.hpp"
+#include "../utils/tools.hpp"
 #include <queue>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <numeric>
-#include "ProcessTimer.hpp"
-#include "utils.hpp"
+#include "../utils/ProcessTimer.hpp"
+#include "../utils/utils.hpp"
 
 using namespace std;
 
@@ -63,9 +63,9 @@ extern bool dispath2(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_support
                      vector<ANSWER> &X_results);
 
 extern bool dispath(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_site_id_vec,
-             const int max_95_percent_index,
-             vector<vector<SERVER_FLOW>> &flows_vec,
-             vector<ANSWER> &X_results);
+                    const int max_95_percent_index,
+                    vector<vector<SERVER_FLOW>> &flows_vec,
+                    vector<ANSWER> &X_results);
 
 /**
  * @brief
@@ -97,9 +97,9 @@ void optimize(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow
 
     MyUtils::MyTimer::ProcessTimer process_timer;
     const int jiange = 100;
-    for (int i = 0; i < 10000; i++)
+    for (int i = 1; i < 100000; i++)
     {
-        if (i % jiange == 99 && process_timer.duration() > 60 * 1000)
+        if (i % jiange == 0 && process_timer.duration() > 290 * 1000)
         {
             break;
         }
@@ -151,7 +151,8 @@ void optimize(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow
     }
 
     {
-        //做测试用，输出最终的结果的成本
+//做测试用，输出最终的结果的成本
+#ifdef TEST
         vector<int> flows_vec_95_according_site_id(g_qos.client_name.size(), 0);
         {
             int idx = calculate_quantile_index(0.95);
@@ -162,5 +163,6 @@ void optimize(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow
         }
         int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
         printf("%d\n", sum);
+#endif
     }
 }
