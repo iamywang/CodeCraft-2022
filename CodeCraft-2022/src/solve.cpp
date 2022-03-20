@@ -168,6 +168,10 @@ void solve_X(vector<int> demand, // copy一份
                         server_id_vec.push_back(i);
                     }
                 }
+                if(server_id_vec.size() == 0)
+                {
+                    break;
+                }
 
                 int avg_flow_to_dispached = demand[client_id] / server_id_vec.size() + 1; //每个边缘节点平均可分配的流量
                 for (int i = 0; i < server_id_vec.size(); i++)

@@ -2,12 +2,13 @@
 #include "tools.hpp"
 #include "global.hpp"
 #include "DataIn.hpp"
-
+#include "ProcessTimer.hpp"
 extern int solve(std::vector<ANSWER> &X_results);
 extern void write_result(const std::vector<ANSWER> &X_results);
 
 int main()
 {
+    MyUtils::MyTimer::ProcessTimer timer;
     g_qos_constraint = read_qos_constraint();
     // printf("g_qos_constraint: %d\n", g_qos_constraint);
     read_demand(g_demand);
@@ -40,5 +41,6 @@ int main()
         printf("solve failed\n");
     }
     // write_result(X_results);
+    printf("总耗时：%d ms\n", timer.duration());
     return 0;
 }
