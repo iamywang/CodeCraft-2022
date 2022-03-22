@@ -2,8 +2,10 @@
 #include "CSV.hpp"
 #include "../global.hpp"
 
-// const static std::string base_path("/data/data_1/");
-const static std::string base_path("/data/");
+using namespace global;
+
+const static std::string base_path("/data/data_1/");
+// const static std::string base_path("/data/");
 
 
 const static char *file_names[] = {

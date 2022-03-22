@@ -1,15 +1,15 @@
-#include "global.hpp"
 #include "./utils/tools.hpp"
 #include <iostream>
 #include <numeric>
 #include <cmath>
 #include "./utils/utils.hpp"
+#include "./optimize/optimize_interface.hpp"
 
 using namespace std;
 
 int calculate_price(const vector<ANSWER> &X_results)
 {
-    vector<vector<int>> real_site_flow(g_qos.site_name.size(), vector<int>(g_demand.mtime.size(), 0));
+    vector<vector<int>> real_site_flow(g_qos.site_name.size(), vector<int>(optimize::g_demand.mtime.size(), 0));
     for (int t = 0; t < X_results.size(); t++)
     {
         const auto &X = X_results[t];
@@ -45,13 +45,13 @@ bool verify(const vector<ANSWER> &X_results)
             int sum = MyUtils::Tools::sum_column(X.flow, site_id);
             if (sum != X.sum_flow_site[site_id])
             {
-                printf("%s: ", X.mtime);
+                printf("%s: ", X.mtime.c_str());
                 printf("X.sum_flow_site[%d] = %d, but real sum = %d\n", site_id, X.sum_flow_site[site_id], sum);
                 return false;
             }
             else if (X.sum_flow_site[site_id] > g_site_bandwidth.bandwidth[site_id])
             {
-                printf("%s: ", X.mtime);
+                printf("%s: ", X.mtime.c_str());
                 printf("X.sum_flow_site[%d] = %d, but real bandwidth[%d] = %d\n", site_id, X.sum_flow_site[site_id], site_id, g_site_bandwidth.bandwidth[site_id]);
                 return false;
             }
@@ -69,9 +69,9 @@ bool verify(const vector<ANSWER> &X_results)
             }
 
             int sum = std::accumulate(flow[client_id].begin(), flow[client_id].end(), 0); //客户的流量总和
-            if (sum != g_demand.demand[g_demand.get(X.mtime)][client_id])
+            if (sum != optimize::g_demand.demand[optimize::g_demand.get(X.mtime)][client_id])
             {
-                cout << X.mtime << " " << client_id << " " << sum << " " << g_demand.demand[g_demand.get(X.mtime)][client_id] << endl;
+                cout << X.mtime << " " << client_id << " " << sum << " " << optimize::g_demand.demand[optimize::g_demand.get(X.mtime)][client_id] << endl;
                 cout << "sum is not equal demand" << endl;
                 return false;
             }

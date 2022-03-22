@@ -2,7 +2,8 @@
 #include <iostream>
 #include <cstring>
 
-// static const char *output_path = "/mnt/c/Users/wangzhankun/Desktop/huawei/SDK_C++/CodeCraft-2022/output/"
+using namespace global;
+
 static const char *output_path = "/output/"
                                  "solution.txt";
 

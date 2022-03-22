@@ -15,8 +15,10 @@ typedef struct _DEMAND
 {
     std::vector<std::string> mtime;
     std::vector<std::vector<int>> demand;
+
 private:
     std::map<std::string, int> mtime_2_id;
+
 public:
     /**
      * @brief 获取对应mtime的demand的索引
@@ -26,26 +28,23 @@ public:
      */
     int get(const std::string &time)
     {
-        if(mtime_2_id.empty())
+        if (mtime_2_id.empty())
         {
-            for(int i = 0; i < mtime.size(); i++)
+            for (int i = 0; i < mtime.size(); i++)
             {
                 mtime_2_id[mtime[i]] = i;
             }
         }
         return mtime_2_id[time];
-        // auto p = std::find(mtime.begin(), mtime.end(), time);
-        // if (p == mtime.end())
-        // {
-        //     return -1;
-        // }
-        // else
-        // {
-        //     return p - mtime.begin();
-        // }
     }
 
-    
+    void clear()
+    {
+        mtime_2_id.clear();
+        mtime.clear();
+        demand.clear();
+    }
+
 } DEMAND;
 
 typedef struct _QOS
@@ -72,9 +71,11 @@ typedef struct _SERVER_SUPPORTED_FLOW
 } SERVER_SUPPORTED_FLOW;
 
 extern int g_qos_constraint;
-
-extern DEMAND g_demand;
-
 extern SITE_BANDWIDTH g_site_bandwidth;
-
 extern QOS g_qos;
+namespace global
+{
+
+    extern DEMAND g_demand;
+
+}
