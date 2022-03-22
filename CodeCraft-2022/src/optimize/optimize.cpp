@@ -96,10 +96,10 @@ void optimize(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow
     const int max_95_percent_index = calculate_quantile_index(0.95);
 
     MyUtils::MyTimer::ProcessTimer process_timer;
-    const int jiange = 100;
+    const int jiange = 50;
     for (int i = 1; i < 100000; i++)
     {
-        if (i % jiange == 0 && process_timer.duration() > 290 * 1000)
+        if (i % jiange == 0 && process_timer.duration() > 280 * 1000)
         {
             break;
         }

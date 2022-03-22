@@ -51,7 +51,7 @@ bool update_X(ANSWER &X,
         else //否则不能超过95%分位的限制
         {
             added = std::min(server_supported_flow[server_id].max_flow,
-                             flows_vec_95_according_site_id[server_id] - 1) -
+                             int(flows_vec_95_according_site_id[server_id] * 0.4)) -
                     X.sum_flow_site[server_id];
         }
 
