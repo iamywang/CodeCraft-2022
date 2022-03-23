@@ -61,7 +61,7 @@ bool verify(const vector<ANSWER> &X_results)
         {
             for (int j = 0; j < flow[client_id].size(); j++)
             {
-                if (flow[client_id][j] && g_qos.qos[j][client_id] <= 0)
+                if ((flow[client_id][j] && g_qos.qos[j][client_id] <= 0) || flow[client_id][j] < 0)
                 {
                     cout << X.mtime << " client " << g_qos.client_name[client_id] << " server " << g_qos.site_name[j] << endl;
                     return false;
