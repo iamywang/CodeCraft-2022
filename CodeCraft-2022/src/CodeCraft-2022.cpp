@@ -6,11 +6,13 @@
 #include "optimize/optimize_interface.hpp"
 #include "optimize/Solver.hpp"
 #include "utils/Verifier.hpp"
-
+#include "utils/Thread/ThreadPoll.hpp"
 extern void write_result(const std::vector<ANSWER> &X_results);
 
-const int NUM_MINIUM = 100;    //最小分组中每组最多有多少个元素
-const int NUM_ITERATION = 200; //最小分组的最大迭代次数
+const int NUM_MINIUM_PER_BLOCK = 100;    //最小分组中每组最多有多少个元素
+const int NUM_ITERATION = 300; //最小分组的最大迭代次数
+
+static MyUtils::Thread::ThreadPool thread_pool(4);
 
 /**
  * @brief 前闭后闭区间
@@ -28,11 +30,12 @@ bool task(const int left,
           const bool is_generated_initial_results,
           std::vector<ANSWER> &X_results)
 {
-    optimize::g_demand.clear();
+    DEMAND demand;
+    demand.clear();
     for (int i = left; i <= right; i++)
     {
-        optimize::g_demand.demand.push_back(global::g_demand.demand[i]);
-        optimize::g_demand.mtime.push_back(global::g_demand.mtime[i]);
+        demand.demand.push_back(global::g_demand.demand[i]);
+        demand.mtime.push_back(global::g_demand.mtime[i]);
     }
 
     /*
@@ -47,18 +50,16 @@ bool task(const int left,
         //*/
 
     //*
-        optimize::Solver solver(optimize::g_demand);
-        solver.m_X_results = X_results;
-        if (solver.solve(num_iteration, is_generated_initial_results) == 0)
-        {
-            X_results = solver.m_X_results;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-        //*/
+    optimize::Solver solver(X_results, demand);
+    if (solver.solve(num_iteration, is_generated_initial_results) == 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+    //*/
 }
 
 /**
@@ -72,52 +73,65 @@ bool task(const int left,
  */
 bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_results)
 {
-    if (right - left > 100)
+    if (right - left > NUM_MINIUM_PER_BLOCK)
     {
         int mid = (left + right) / 2;
-
         std::vector<ANSWER> X_results_right;
+
         if (!divide_conquer(left, mid, X_results))
             return false;
+
         if (!divide_conquer(mid + 1, right, X_results_right))
             return false;
 
         //合并
-        optimize::g_demand.clear();
+        // optimize::g_demand.clear();
+        DEMAND demand;
+        demand.clear();
         for (auto &X : X_results)
         {
-            optimize::g_demand.demand.push_back(global::g_demand.demand[global::g_demand.get(X.mtime)]);
-            optimize::g_demand.mtime.push_back(global::g_demand.mtime[global::g_demand.get(X.mtime)]);
+            demand.demand.push_back(global::g_demand.demand[global::g_demand.get(X.mtime)]);
+            demand.mtime.push_back(global::g_demand.mtime[global::g_demand.get(X.mtime)]);
         }
         for (auto &X : X_results_right)
         {
-            optimize::g_demand.demand.push_back(global::g_demand.demand[global::g_demand.get(X.mtime)]);
-            optimize::g_demand.mtime.push_back(global::g_demand.mtime[global::g_demand.get(X.mtime)]);
+            demand.demand.push_back(global::g_demand.demand[global::g_demand.get(X.mtime)]);
+            demand.mtime.push_back(global::g_demand.mtime[global::g_demand.get(X.mtime)]);
             X_results.push_back(X);
         }
 
-        if (optimize::solve(NUM_ITERATION, false, X_results) == 0)
         {
-            return true;
+            // if (optimize::solve(NUM_ITERATION, false, X_results) == 0)
+            // {
+            //     return true;
+            // }
+            // else
+            // {
+            //     return false;
+            // }
         }
-        else
+
         {
-            return false;
+            int num_iteration = NUM_ITERATION;
+            if(X_results.size() > 1000)
+            {
+                num_iteration = 200;
+            }
+            optimize::Solver solver(X_results, demand);
+            if (solver.solve(num_iteration, false) == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
     else
     {
         return task(left, right, NUM_ITERATION, true, X_results);
     }
-}
-
-void test_solver(std::vector<ANSWER> &X_results)
-{
-    optimize::Solver solver(global::g_demand);
-    optimize::g_demand = global::g_demand;
-    solver.solve(1000, true);
-
-    X_results = solver.m_X_results;
 }
 
 int main()
@@ -131,8 +145,35 @@ int main()
 
     std::vector<ANSWER> X_results;
 
+    //*
     {
-        divide_conquer(0, global::g_demand.demand.size() - 1, X_results);
+        vector<ANSWER> X_results_tmp[4];
+        vector<std::future<bool>> rets_vec;
+        const int step = (int)global::g_demand.demand.size() / 4 + 1;
+        for (int i = 0; i < 4; i++)
+        {
+            int left = i * step;
+            int right = (i + 1) * step - 1;
+            if (right >= global::g_demand.demand.size())
+                right = global::g_demand.demand.size() - 1;
+            rets_vec.push_back(thread_pool.commit([=, &X_results_tmp]()
+                                                  { return divide_conquer(left, right, X_results_tmp[i]); }));
+        }
+        bool flag = true;
+        for (int i = 0; i < 4; i++)
+        {
+            flag &= rets_vec[i].get();
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            X_results.insert(X_results.end(), X_results_tmp[i].begin(), X_results_tmp[i].end());
+        }
+        task(0, global::g_demand.demand.size() - 1, NUM_ITERATION, false, X_results);
+    }
+    //*/
+
+    {
+        // divide_conquer(0, global::g_demand.demand.size() - 1, X_results);
     }
 
     // test_solver(X_results);

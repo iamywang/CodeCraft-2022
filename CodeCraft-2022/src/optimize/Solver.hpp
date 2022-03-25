@@ -12,29 +12,27 @@
 
 using namespace std;
 
-
 namespace optimize
 {
+    typedef struct _MAX_5_PERCENT_FLOW
+    {
+        // max priority queue
+        priority_queue<int, vector<int>, greater<int>> max_flow_queue;
+    } MAX_5_PERCENT_FLOW;
 
     class Solver
     {
     private:
-        typedef struct _MAX_5_PERCENT_FLOW
-        {
-            // max priority queue
-            priority_queue<int, vector<int>, greater<int>> max_flow_queue;
-        } MAX_5_PERCENT_FLOW;
-
         vector<MAX_5_PERCENT_FLOW> m_max_5_percent_flow_vec; //边缘节点对应的能存储的最大的5%流量
 
         vector<vector<SERVER_SUPPORTED_FLOW>> m_server_supported_flow_2_time_vec;
         DEMAND m_demand;
 
     public:
-        std::vector<ANSWER> m_X_results;
+        std::vector<ANSWER> &m_X_results;
 
     public:
-        Solver(const DEMAND &demand) : m_demand(demand)
+        Solver(std::vector<ANSWER> &X_results, const DEMAND &demand) : m_X_results(X_results), m_demand(demand)
         {
         }
         ~Solver() {}
@@ -71,7 +69,7 @@ namespace optimize
             }
 
             Optimizer(this->m_demand).optimize(m_server_supported_flow_2_time_vec, m_X_results, num_iteration);
-
+#ifdef TEST
             if (Verifier(this->m_demand).verify(m_X_results))
             {
                 cout << "verify success" << endl;
@@ -82,13 +80,14 @@ namespace optimize
                 printf("verify failed\n");
                 return -1;
             }
-
+#endif
             return 0;
         }
 
     private:
         void generate_initial_X_results()
         {
+            m_max_5_percent_flow_vec.clear();
             m_max_5_percent_flow_vec.resize(g_qos.site_name.size());
 
             m_X_results.resize(m_demand.mtime.size());

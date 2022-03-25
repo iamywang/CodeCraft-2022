@@ -256,6 +256,7 @@ namespace optimize
 
         optimize(server_supported_flow_2_time_vec, X_results, num_iteration);
 
+#ifdef TEST
         if (Verifier(optimize::g_demand).verify(X_results))
         {
             cout << "verify success" << endl;
@@ -266,7 +267,7 @@ namespace optimize
             printf("verify failed\n");
             return -1;
         }
-
+#endif
         return 0;
     }
 } // namespace optimize
