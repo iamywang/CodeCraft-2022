@@ -206,7 +206,7 @@ namespace optimize
         if (is_generate_initial_results)
         {
             // vector<ANSWER> X_results;
-
+            // max_5_percent_flow_vec.clear();
             max_5_percent_flow_vec.resize(g_qos.site_name.size());
 
             X_results.resize(g_demand.mtime.size());

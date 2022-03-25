@@ -4,12 +4,62 @@
 #include "data_in_out/DataIn.hpp"
 #include "utils/ProcessTimer.hpp"
 #include "optimize/optimize_interface.hpp"
+#include "optimize/Solver.hpp"
 
 extern void write_result(const std::vector<ANSWER> &X_results);
 extern bool verify(const std::vector<ANSWER> &X_results);
 
 const int NUM_MINIUM = 100;    //最小分组中每组最多有多少个元素
 const int NUM_ITERATION = 200; //最小分组的最大迭代次数
+
+/**
+ * @brief 前闭后闭区间
+ *
+ * @param left
+ * @param right
+ * @param num_iteration
+ * @param X_results
+ * @return true
+ * @return false
+ */
+bool task(const int left,
+          const int right,
+          const int num_iteration,
+          const bool is_generated_initial_results,
+          std::vector<ANSWER> &X_results)
+{
+    optimize::g_demand.clear();
+    for (int i = left; i <= right; i++)
+    {
+        optimize::g_demand.demand.push_back(global::g_demand.demand[i]);
+        optimize::g_demand.mtime.push_back(global::g_demand.mtime[i]);
+    }
+
+    /*
+        if (optimize::solve(num_iteration, is_generated_initial_results, X_results) == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+        //*/
+
+    //*
+        optimize::Solver solver(optimize::g_demand);
+        solver.m_X_results = X_results;
+        if (solver.solve(num_iteration, is_generated_initial_results) == 0)
+        {
+            X_results = solver.m_X_results;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+        //*/
+}
 
 /**
  * @brief 前闭后闭区间。通过分治方法计算最优解
@@ -25,20 +75,19 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
     if (right - left > 100)
     {
         int mid = (left + right) / 2;
-        std::vector<ANSWER> X_results_left;
+
         std::vector<ANSWER> X_results_right;
-        if (!divide_conquer(left, mid, X_results_left))
+        if (!divide_conquer(left, mid, X_results))
             return false;
         if (!divide_conquer(mid + 1, right, X_results_right))
             return false;
 
         //合并
         optimize::g_demand.clear();
-        for (auto &X : X_results_left)
+        for (auto &X : X_results)
         {
             optimize::g_demand.demand.push_back(global::g_demand.demand[global::g_demand.get(X.mtime)]);
             optimize::g_demand.mtime.push_back(global::g_demand.mtime[global::g_demand.get(X.mtime)]);
-            X_results.push_back(X);
         }
         for (auto &X : X_results_right)
         {
@@ -58,6 +107,7 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
     }
     else
     {
+        /*
         optimize::g_demand.clear();
         for (int i = left; i <= right; i++)
         {
@@ -73,36 +123,18 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
         {
             return false;
         }
+        //*/
+        return task(left, right, NUM_ITERATION, true, X_results);
     }
 }
 
-/**
- * @brief 前闭后闭区间
- *
- * @param left
- * @param right
- * @param num_iteration
- * @param X_results
- * @return true
- * @return false
- */
-bool task(const int left, const int right, const int num_iteration, std::vector<ANSWER> &X_results)
+void test_solver(std::vector<ANSWER> &X_results)
 {
-    optimize::g_demand.clear();
-    for (int i = left; i <= right; i++)
-    {
-        optimize::g_demand.demand.push_back(global::g_demand.demand[i]);
-        optimize::g_demand.mtime.push_back(global::g_demand.mtime[i]);
-    }
+    optimize::Solver solver(global::g_demand);
+    optimize::g_demand = global::g_demand;
+    solver.solve(1000, true);
 
-    if (optimize::solve(num_iteration, true, X_results) == 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    X_results = solver.m_X_results;
 }
 
 int main()
@@ -116,61 +148,11 @@ int main()
 
     std::vector<ANSWER> X_results;
 
-    /*
-        {
-            std::vector<std::vector<ANSWER>> X_results_vec;
-            for (int i = 0; i < global::g_demand.demand.size(); i += NUM_MINIUM)
-            {
-                X_results_vec.push_back(std::vector<ANSWER>());
-                auto &X_results_tmp = X_results_vec.back();
-                if (!task(i, i + NUM_MINIUM - 1, NUM_ITERATION, X_results_tmp))
-                {
-                    std::cout << "error" << std::endl;
-                    return 0;
-                }
-            }
-
-            int num_iteration = NUM_ITERATION;
-            auto fun = []() {};
-            while (X_results_vec.size() > 1)
-            {
-                std::vector<std::vector<ANSWER>> X_results_vec_tmp;
-                num_iteration *= 2;
-                for (int i = 0; i < X_results_vec.size() - 1; i += 2)
-                {
-                    X_results_vec_tmp.push_back(std::vector<ANSWER>());
-                    auto &X_results_tmp = X_results_vec_tmp.back();
-                    if (!task(i, i + 1, num_iteration, X_results_tmp))
-                    {
-                        std::cout << "error" << std::endl;
-                        return 0;
-                    }
-                }
-                if (X_results_vec.size() % 2 == 1)
-                {
-                    X_results_vec_tmp.push_back(std::vector<ANSWER>());
-                    auto &X_results_tmp = X_results_vec_tmp.back();
-                    if (!task(X_results_vec.size() - 1, X_results_vec.size() - 1, 200, X_results_tmp))
-                    {
-                        std::cout << "error" << std::endl;
-                        return 0;
-                    }
-                }
-                X_results_vec = X_results_vec_tmp;
-            }
-
-            optimize::g_demand.clear();
-            optimize::g_demand.demand = global::g_demand.demand;
-            optimize::g_demand.mtime = global::g_demand.mtime;
-
-            optimize::solve(1000, false, X_results);
-
-        }
-        //*/
-
     {
         divide_conquer(0, global::g_demand.demand.size() - 1, X_results);
     }
+
+    // test_solver(X_results);
 
     if (verify(X_results))
     {
@@ -180,7 +162,6 @@ int main()
     {
         printf("solve failed\n");
     }
-
 
     printf("总耗时：%d ms\n", timer.duration());
 
