@@ -5,10 +5,9 @@
 #include <queue>
 #include "optimize_interface.hpp"
 #include "../utils/tools.hpp"
-
+#include "../utils/Verifier.hpp"
 using namespace std;
 
-extern bool verify(const vector<ANSWER> &X_results);
 
 namespace optimize
 {
@@ -257,7 +256,7 @@ namespace optimize
 
         optimize(server_supported_flow_2_time_vec, X_results, num_iteration);
 
-        if (verify(X_results))
+        if (Verifier(optimize::g_demand).verify(X_results))
         {
             cout << "verify success" << endl;
         }

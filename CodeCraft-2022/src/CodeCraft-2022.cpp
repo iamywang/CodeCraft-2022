@@ -5,9 +5,9 @@
 #include "utils/ProcessTimer.hpp"
 #include "optimize/optimize_interface.hpp"
 #include "optimize/Solver.hpp"
+#include "utils/Verifier.hpp"
 
 extern void write_result(const std::vector<ANSWER> &X_results);
-extern bool verify(const std::vector<ANSWER> &X_results);
 
 const int NUM_MINIUM = 100;    //最小分组中每组最多有多少个元素
 const int NUM_ITERATION = 200; //最小分组的最大迭代次数
@@ -137,7 +137,7 @@ int main()
 
     // test_solver(X_results);
 
-    if (verify(X_results))
+    if (Verifier(global::g_demand).verify(X_results))
     {
         write_result(X_results);
     }
