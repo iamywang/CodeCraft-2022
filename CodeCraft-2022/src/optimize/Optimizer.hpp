@@ -62,7 +62,7 @@ public:
             const int jiange = 50;
             for (int i = 1; i < num_iteration; i++)
             {
-                if (i % jiange == 0 && total_used_time + process_timer.duration() > 280 * 1000)
+                if (i % jiange == 0 && total_used_time + process_timer.duration() > 610 * 1000)
                 {
                     break;
                 }
