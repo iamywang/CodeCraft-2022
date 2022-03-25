@@ -47,7 +47,6 @@ private:
 public:
     bool verify(const vector<ANSWER> &X_results)
     {
-#ifdef TEST
         for (const auto &X : X_results)
         {
             const auto &flow = X.flow;
@@ -95,7 +94,6 @@ public:
             int price = calculate_price(X_results);
             printf("verify:总成本是 %d\n", price);
         }
-#endif
         return true;
     }
 };
