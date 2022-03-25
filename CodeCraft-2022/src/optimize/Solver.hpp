@@ -8,10 +8,10 @@
 #include "optimize_interface.hpp"
 #include "../utils/tools.hpp"
 #include "Optimizer.hpp"
+#include "../utils/Verifier.hpp"
 
 using namespace std;
 
-extern bool verify(const vector<ANSWER> &X_results);
 
 namespace optimize
 {
@@ -72,7 +72,7 @@ namespace optimize
 
             Optimizer(this->m_demand).optimize(m_server_supported_flow_2_time_vec, m_X_results, num_iteration);
 
-            if (verify(m_X_results))
+            if (Verifier(this->m_demand).verify(m_X_results))
             {
                 cout << "verify success" << endl;
             }

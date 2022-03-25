@@ -9,14 +9,12 @@
 #include <numeric>
 #include "../utils/ProcessTimer.hpp"
 #include "../utils/utils.hpp"
+#include "./optimize_utils.hpp"
+
 using namespace std;
 
 namespace optimize
 {
-    extern void get_server_flow_vec_by_quantile(const int quantile,
-                                                vector<vector<SERVER_FLOW>> &flows_vec,
-                                                vector<SERVER_FLOW> &flows_vec_quantile,
-                                                vector<int> &flows_vec_quantile_according_site_id);
 
     class Dispather
     {

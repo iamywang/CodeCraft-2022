@@ -1,9 +1,9 @@
-#include "./utils/tools.hpp"
+#include "./tools.hpp"
 #include <iostream>
 #include <numeric>
 #include <cmath>
-#include "./utils/utils.hpp"
-#include "./optimize/optimize_interface.hpp"
+#include "./utils.hpp"
+#include "../optimize/optimize_interface.hpp"
 
 using namespace std;
 
