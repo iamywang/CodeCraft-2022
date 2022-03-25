@@ -11,8 +11,8 @@ extern void write_result(const std::vector<ANSWER> &X_results);
 
 const int NUM_MINIUM_PER_BLOCK = 100;    //最小分组中每组最多有多少个元素
 const int NUM_ITERATION = 300; //最小分组的最大迭代次数
-
-static MyUtils::Thread::ThreadPool thread_pool(4);
+const int NUM_THREAD = 4;
+static MyUtils::Thread::ThreadPool thread_pool(NUM_THREAD);
 
 /**
  * @brief 前闭后闭区间
@@ -147,10 +147,10 @@ int main()
 
     //*
     {
-        vector<ANSWER> X_results_tmp[4];
+        vector<ANSWER> X_results_tmp[NUM_THREAD];
         vector<std::future<bool>> rets_vec;
-        const int step = (int)global::g_demand.demand.size() / 4 + 1;
-        for (int i = 0; i < 4; i++)
+        const int step = (int)global::g_demand.demand.size() / NUM_THREAD + 1;
+        for (int i = 0; i < NUM_THREAD; i++)
         {
             int left = i * step;
             int right = (i + 1) * step - 1;
@@ -160,11 +160,11 @@ int main()
                                                   { return divide_conquer(left, right, X_results_tmp[i]); }));
         }
         bool flag = true;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < NUM_THREAD; i++)
         {
             flag &= rets_vec[i].get();
         }
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < NUM_THREAD; i++)
         {
             X_results.insert(X_results.end(), X_results_tmp[i].begin(), X_results_tmp[i].end());
         }
