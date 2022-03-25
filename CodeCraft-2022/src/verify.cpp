@@ -25,7 +25,7 @@ int calculate_price(const vector<ANSWER> &X_results)
         std::sort(v.begin(), v.end());
     }
 
-    int quantile_idx = calculate_quantile_index(0.95);
+    int quantile_idx = calculate_quantile_index(0.95, optimize::g_demand.mtime.size());
     int sum = 0;
     for (int i = 0; i < real_site_flow.size(); i++)
     {

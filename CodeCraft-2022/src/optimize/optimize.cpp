@@ -12,14 +12,6 @@ using namespace std;
 
 namespace optimize
 {
-
-    typedef struct _SERVER_FLOW
-    {
-        int ans_id;  //记录对应流量所在解的位置
-        int site_id; //记录对应流量的边缘节点
-        int flow;    //当前流量
-    } SERVER_FLOW;
-
     /**
      * @brief 函数会对flows_vec按照flow从小到大排序
      *
@@ -98,7 +90,7 @@ namespace optimize
         }
 
         // const int max_95_percent_index = std::ceil(g_site_bandwidth.site_name.size() * 0.95) - 1; // 95%分位的索引需要减去1
-        const int max_95_percent_index = calculate_quantile_index(0.95);
+        const int max_95_percent_index = calculate_quantile_index(0.95,optimize::g_demand.mtime.size());
 
         static long long total_used_time = 0;//以毫秒为单位
         MyUtils::MyTimer::ProcessTimer process_timer;
@@ -129,7 +121,7 @@ namespace optimize
                 //更新一遍后5%的分位流量
                 for (int i = 96; i <= 100; i++)
                 {
-                    int quantile_index = calculate_quantile_index(double(i) / 100.0);
+                    int quantile_index = calculate_quantile_index(double(i) / 100.0,optimize::g_demand.mtime.size());
                     if (quantile_index == last_quantile_index)
                     {
                         continue;
@@ -161,10 +153,10 @@ namespace optimize
 #ifdef TEST
             vector<int> flows_vec_95_according_site_id(g_qos.client_name.size(), 0);
             {
-                int idx = calculate_quantile_index(0.95);
+                int idx = calculate_quantile_index(0.95,optimize::g_demand.mtime.size());
 
                 vector<SERVER_FLOW> flows_vec_quantile2;
-                get_server_flow_vec_by_quantile(calculate_quantile_index(0.95),
+                get_server_flow_vec_by_quantile(calculate_quantile_index(0.95,optimize::g_demand.mtime.size()),
                                                 flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
             }
             int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);

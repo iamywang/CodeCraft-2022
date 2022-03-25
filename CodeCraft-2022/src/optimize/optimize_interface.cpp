@@ -3,4 +3,5 @@
 namespace optimize
 {
     DEMAND g_demand{};
+
 }

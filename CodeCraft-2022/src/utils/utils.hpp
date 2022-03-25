@@ -1,4 +1,4 @@
 
 
-int calculate_quantile_index(double quantile);
+int calculate_quantile_index(double quantile, unsigned long size);
 

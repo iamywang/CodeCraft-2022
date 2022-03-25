@@ -107,23 +107,6 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
     }
     else
     {
-        /*
-        optimize::g_demand.clear();
-        for (int i = left; i <= right; i++)
-        {
-            optimize::g_demand.demand.push_back(global::g_demand.demand[i]);
-            optimize::g_demand.mtime.push_back(global::g_demand.mtime[i]);
-        }
-
-        if (optimize::solve(NUM_ITERATION, true, X_results) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-        //*/
         return task(left, right, NUM_ITERATION, true, X_results);
     }
 }

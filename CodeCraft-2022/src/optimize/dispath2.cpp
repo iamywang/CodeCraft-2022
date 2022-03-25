@@ -12,12 +12,6 @@ using namespace std;
 // #define SET_LOW_LIMIT
 namespace optimize
 {
-    typedef struct _SERVER_FLOW
-    {
-        int ans_id;  //记录对应流量所在解的位置
-        int site_id; //记录对应流量的边缘节点
-        int flow;    //当前流量
-    } SERVER_FLOW;
 
     extern void get_server_flow_vec_by_quantile(const int quantile,
                                                 vector<vector<SERVER_FLOW>> &flows_vec,
@@ -213,7 +207,7 @@ namespace optimize
 
         vector<int> flows_vec_95_according_site_id(flows_vec_quantile_according_site_id.size(), 0);
         {
-            int idx = calculate_quantile_index(0.95);
+            int idx = calculate_quantile_index(0.95,optimize::g_demand.mtime.size());
             if (idx == quantile)
             {
                 flows_vec_95_according_site_id = flows_vec_quantile_according_site_id;
@@ -221,7 +215,7 @@ namespace optimize
             else
             {
                 vector<SERVER_FLOW> flows_vec_quantile2;
-                get_server_flow_vec_by_quantile(calculate_quantile_index(0.95),
+                get_server_flow_vec_by_quantile(calculate_quantile_index(0.95,optimize::g_demand.mtime.size()),
                                                 flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
             }
         }
@@ -236,7 +230,7 @@ namespace optimize
 
         {
             vector<SERVER_FLOW> tmp;
-            get_server_flow_vec_by_quantile(calculate_quantile_index(0.8),
+            get_server_flow_vec_by_quantile(calculate_quantile_index(0.8,optimize::g_demand.mtime.size()),
                                             flows_vec,
                                             tmp,
                                             flows_vec_low_limit_according_site_id);
@@ -283,7 +277,7 @@ namespace optimize
 
         {
             vector<SERVER_FLOW> tmp;
-            get_server_flow_vec_by_quantile(calculate_quantile_index(0.2),
+            get_server_flow_vec_by_quantile(calculate_quantile_index(0.2,optimize::g_demand.mtime.size()),
                                             flows_vec,
                                             tmp,
                                             flows_vec_low_limit_according_site_id);

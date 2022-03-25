@@ -9,9 +9,9 @@
  * @param size
  * @return int
  */
-int calculate_quantile_index(double quantile)
+int calculate_quantile_index(double quantile, unsigned long size)
 {
-    return std::ceil(quantile * optimize::g_demand.mtime.size()) - 1; //因为是索引，所以需要减去1
+    return std::ceil(quantile * size) - 1; //因为是索引，所以需要减去1
 }
 
 

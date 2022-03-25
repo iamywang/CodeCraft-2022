@@ -7,6 +7,7 @@
 #include <queue>
 #include "optimize_interface.hpp"
 #include "../utils/tools.hpp"
+#include "Optimizer.hpp"
 
 using namespace std;
 
@@ -14,10 +15,6 @@ extern bool verify(const vector<ANSWER> &X_results);
 
 namespace optimize
 {
-
-    extern void optimize(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_time_vec,
-                         vector<ANSWER> &X_results,
-                         const int num_iteration);
 
     class Solver
     {
@@ -41,34 +38,6 @@ namespace optimize
         {
         }
         ~Solver() {}
-
-        void generate_initial_X_results()
-        {
-            m_max_5_percent_flow_vec.resize(g_qos.site_name.size());
-
-            m_X_results.resize(m_demand.mtime.size());
-            // 求解每一时刻的X
-            for (auto &server_supported_flow : m_server_supported_flow_2_time_vec)
-            {
-                const auto &mtime = server_supported_flow[0].mtime;
-                int index = m_demand.get(mtime);
-                if (index == -1)
-                {
-                    char buf[1024];
-                    sprintf(buf, "mtime: %s not found in demand", mtime.c_str());
-                    throw runtime_error(string(buf));
-                }
-
-                //取出对应时刻的demand
-                vector<int> &demand_at_mtime = m_demand.demand[m_demand.get(mtime)];
-
-                ANSWER ans;
-                ans.mtime = mtime;
-                solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, server_supported_flow, ans);
-
-                m_X_results[m_demand.get(mtime)] = ans;
-            }
-        }
 
         int solve(const int num_iteration, const bool is_generate_initial_results)
         {
@@ -101,7 +70,7 @@ namespace optimize
                           { return a.server_index < b.server_index; });
             }
 
-            optimize(m_server_supported_flow_2_time_vec, m_X_results, num_iteration);
+            Optimizer(this->m_demand).optimize(m_server_supported_flow_2_time_vec, m_X_results, num_iteration);
 
             if (verify(m_X_results))
             {
@@ -118,6 +87,34 @@ namespace optimize
         }
 
     private:
+        void generate_initial_X_results()
+        {
+            m_max_5_percent_flow_vec.resize(g_qos.site_name.size());
+
+            m_X_results.resize(m_demand.mtime.size());
+            // 求解每一时刻的X
+            for (auto &server_supported_flow : m_server_supported_flow_2_time_vec)
+            {
+                const auto &mtime = server_supported_flow[0].mtime;
+                int index = m_demand.get(mtime);
+                if (index == -1)
+                {
+                    char buf[1024];
+                    sprintf(buf, "mtime: %s not found in demand", mtime.c_str());
+                    throw runtime_error(string(buf));
+                }
+
+                //取出对应时刻的demand
+                vector<int> &demand_at_mtime = m_demand.demand[m_demand.get(mtime)];
+
+                ANSWER ans;
+                ans.mtime = mtime;
+                solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, server_supported_flow, ans);
+
+                m_X_results[m_demand.get(mtime)] = ans;
+            }
+        }
+
         /**
          * @brief
          *
