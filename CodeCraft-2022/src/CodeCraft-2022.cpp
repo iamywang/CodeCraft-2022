@@ -143,8 +143,8 @@ int main()
 
     g_qos_constraint = read_qos_constraint();
     read_demand(global::g_demand);
-    read_qos(g_qos);
     read_site_bandwidth(g_site_bandwidth);
+    read_qos(g_qos);
 
     std::vector<ANSWER> X_results;
 

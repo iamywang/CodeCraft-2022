@@ -13,4 +13,4 @@ fi
 
 rm -f CodeCraft-2022.zip
 zip -r CodeCraft-2022.zip CodeCraft-2022 
-cp CodeCraft-2022.zip /mnt/c/Users/wangzhankun/Desktop
+# cp CodeCraft-2022.zip /mnt/c/Users/wangzhankun/Desktop
