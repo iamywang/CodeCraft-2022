@@ -13,6 +13,7 @@ typedef struct _SITE_BANDWIDTH
 
 typedef struct _DEMAND
 {
+    std::vector<std::string> client_name;
     std::vector<std::string> mtime;
     std::vector<std::vector<int>> demand;
 

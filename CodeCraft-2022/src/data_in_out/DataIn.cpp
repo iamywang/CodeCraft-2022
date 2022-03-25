@@ -1,11 +1,12 @@
 #include "DataIn.hpp"
 #include "CSV.hpp"
 #include "../global.hpp"
+#include <iostream>
 
 using namespace global;
 
-const static std::string base_path("/data/data_1/");
-// const static std::string base_path("/data/");
+// const static std::string base_path("/data/data_2/");
+const static std::string base_path("/data/");
 
 
 const static char *file_names[] = {
@@ -19,6 +20,9 @@ const static bool generate_fake_data = false;
 const static int site_num = 135;
 const static int client_num = 35;
 const static int T = 8928;
+
+std::map<std::string, int> client_idx;
+std::map<std::string, int> site_idx;
 
 int read_qos_constraint()
 {
@@ -64,6 +68,14 @@ void read_demand(DEMAND &g_demand)
         CSV demand(base_path + file_names[1]);
         auto &demand_vec = g_demand.demand;
         auto &mtime = g_demand.mtime;
+        auto &client_name = g_demand.client_name;
+
+        int cidx = 0;
+        for (auto p = demand.m_header.begin() + 1; p != demand.m_header.end(); p++)
+        {
+            client_name.push_back(*p);
+            client_idx.insert(std::make_pair(*p, cidx++));
+        }
 
         for (auto &con : demand.m_content)
         {
@@ -104,9 +116,11 @@ void read_site_bandwidth(SITE_BANDWIDTH &site_bandwidth)
         auto &site_bandwidth_vec = site_bandwidth.bandwidth;
         auto &site_name = site_bandwidth.site_name;
 
+        int sidx = 0;
         for (auto &con : site_bandwidth_csv.m_content)
         {
             site_name.push_back(con[0]);
+            site_idx.insert(std::make_pair(con[0], sidx++));
             site_bandwidth_vec.push_back(std::stoi(con[1]));
             // site_bandwidth_vec.push_back(int(std::stoi(con[1]) * 0.2));
         }
@@ -154,25 +168,33 @@ void read_qos(QOS &qos)
         std::vector<std::string> &client_name = qos.client_name;
         std::vector<std::string> &site_name = qos.site_name;
 
+        client_name.resize(g_demand.client_name.size());
+        site_name.resize(g_site_bandwidth.site_name.size());
+
+        qos_vec.resize(g_site_bandwidth.site_name.size());
+
         for (auto p = qos_csv.m_header.begin() + 1; p != qos_csv.m_header.end(); p++)
         {
-            client_name.push_back(*p);
+            int cidx = client_idx.find(*p)->second;
+            client_name[cidx] = *p;
         }
 
         for (auto &con : qos_csv.m_content)
         {
-            std::vector<int> tmp;
-            site_name.push_back(con[0]);
+            int sidx = site_idx.find(con[0])->second;
+            site_name[sidx] = con[0];
+            qos_vec[sidx].resize(g_demand.client_name.size());
+
             for (auto p = con.begin() + 1; p != con.end(); p++)
             {
+                int cidx = client_idx.find(*(p - con.begin() + qos_csv.m_header.begin()))->second;
                 int tmp_int = std::stoi(*p);
                 if (tmp_int >= g_qos_constraint)
                 {
                     tmp_int = 0;
                 }
-                tmp.push_back(tmp_int);
+                qos_vec[sidx][cidx] = tmp_int;
             }
-            qos_vec.push_back(tmp);
         }
     }
 
