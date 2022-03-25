@@ -9,8 +9,8 @@
 #include "utils/Thread/ThreadPoll.hpp"
 extern void write_result(const std::vector<ANSWER> &X_results);
 
-const int NUM_MINIUM_PER_BLOCK = 100;    //最小分组中每组最多有多少个元素
-const int NUM_ITERATION = 300; //最小分组的最大迭代次数
+const int NUM_MINIUM_PER_BLOCK = 200;    //最小分组中每组最多有多少个元素
+const int NUM_ITERATION = 200; //最小分组的最大迭代次数
 const int NUM_THREAD = 4;
 static MyUtils::Thread::ThreadPool thread_pool(NUM_THREAD);
 
@@ -168,7 +168,7 @@ int main()
         {
             X_results.insert(X_results.end(), X_results_tmp[i].begin(), X_results_tmp[i].end());
         }
-        task(0, global::g_demand.demand.size() - 1, NUM_ITERATION, false, X_results);
+        task(0, global::g_demand.demand.size() - 1, 10000, false, X_results);
     }
     //*/
 
