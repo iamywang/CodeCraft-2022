@@ -54,7 +54,7 @@ namespace optimize
                 else //否则不能超过95%分位的限制
                 {
                     added = std::min(server_supported_flow[server_id].max_flow,
-                                     int(flows_vec_95_according_site_id[server_id] * 0.8)) -
+                                     int(flows_vec_95_according_site_id[server_id] * 0.9)) -
                             X.sum_flow_site[server_id];
                 }
 
