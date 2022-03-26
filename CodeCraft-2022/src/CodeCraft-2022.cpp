@@ -168,7 +168,7 @@ int main()
 
         vector<vector<ANSWER>*> X_results_vec_for_last_merge;
         {
-            /*
+            //*
             int idx_begin = 0;
             for (int i = 0; i < NUM_THREAD - 1; i += 2)
             {
@@ -176,7 +176,7 @@ int main()
                 X_results_vec_for_last_merge.push_back(&X_results_tmp[i]);
 
                 rets_vec.push_back(thread_pool.commit([=, &X_results_tmp]()
-                                                      { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 200, false, X_results_tmp[i]); }));
+                                                      { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 100, false, X_results_tmp[i]); }));
                 idx_begin += X_results_tmp[i].size();
             }
 
@@ -187,7 +187,7 @@ int main()
             rets_vec.clear();
             //*/
 
-            //*
+            /*
             for(auto& v : X_results_tmp)
             {
                 X_results_vec_for_last_merge.push_back(&v);

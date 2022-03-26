@@ -57,7 +57,11 @@ public:
             const int max_95_percent_index = calculate_quantile_index(0.95,this->m_demand.mtime.size());
 
             Dispather dispahter(this->m_demand);
-            const int jiange = 50;
+            int jiange = 50;
+            if(X_results.size() > 2000)
+            {
+                jiange = 20;
+            }
             for (int i = 0; i < num_iteration; i++)
             {
                 if (i % jiange == 0 && MyUtils::Tools::getCurrentMillisecs() - g_start_time > G_TOTAL_DURATION * 1000)
