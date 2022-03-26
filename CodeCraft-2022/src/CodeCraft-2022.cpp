@@ -9,8 +9,8 @@
 #include "utils/Thread/ThreadPoll.hpp"
 extern void write_result(const std::vector<ANSWER> &X_results);
 
-const int NUM_MINIUM_PER_BLOCK = 200;    //最小分组中每组最多有多少个元素
-const int NUM_ITERATION = 200; //最小分组的最大迭代次数
+const int NUM_MINIUM_PER_BLOCK = 200; //最小分组中每组最多有多少个元素
+const int NUM_ITERATION = 200;        //最小分组的最大迭代次数
 const int NUM_THREAD = 4;
 static MyUtils::Thread::ThreadPool thread_pool(NUM_THREAD);
 
@@ -113,7 +113,7 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
 
         {
             int num_iteration = NUM_ITERATION;
-            if(X_results.size() > 1000)
+            if (X_results.size() > 1000)
             {
                 num_iteration = 200;
             }
@@ -136,7 +136,7 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
 
 int main()
 {
-    MyUtils::MyTimer::ProcessTimer timer;
+    g_start_time = MyUtils::Tools::getCurrentMillisecs();
 
     g_qos_constraint = read_qos_constraint();
     read_demand(global::g_demand);
@@ -160,13 +160,44 @@ int main()
                                                   { return divide_conquer(left, right, X_results_tmp[i]); }));
         }
         bool flag = true;
-        for (int i = 0; i < NUM_THREAD; i++)
+        for (auto &ret : rets_vec)
         {
-            flag &= rets_vec[i].get();
+            flag &= ret.get();
         }
-        for (int i = 0; i < NUM_THREAD; i++)
+        rets_vec.clear();
+
+        vector<vector<ANSWER>*> X_results_vec_for_last_merge;
         {
-            X_results.insert(X_results.end(), X_results_tmp[i].begin(), X_results_tmp[i].end());
+            /*
+            int idx_begin = 0;
+            for (int i = 0; i < NUM_THREAD - 1; i += 2)
+            {
+                X_results_tmp[i].insert(X_results_tmp[i].end(), X_results_tmp[i + 1].begin(), X_results_tmp[i + 1].end());
+                X_results_vec_for_last_merge.push_back(&X_results_tmp[i]);
+
+                rets_vec.push_back(thread_pool.commit([=, &X_results_tmp]()
+                                                      { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 200, false, X_results_tmp[i]); }));
+                idx_begin += X_results_tmp[i].size();
+            }
+
+            for (auto &ret : rets_vec)
+            {
+                flag &= ret.get();
+            }
+            rets_vec.clear();
+            //*/
+
+            //*
+            for(auto& v : X_results_tmp)
+            {
+                X_results_vec_for_last_merge.push_back(&v);
+            }
+            //*/
+        }
+
+        for (int i = 0; i < X_results_vec_for_last_merge.size(); ++i)
+        {
+            X_results.insert(X_results.end(), X_results_vec_for_last_merge[i]->begin(), X_results_vec_for_last_merge[i]->end());
         }
         task(0, global::g_demand.demand.size() - 1, 10000, false, X_results);
     }
@@ -187,7 +218,7 @@ int main()
         printf("solve failed\n");
     }
 
-    printf("总耗时：%d ms\n", timer.duration());
+    printf("总耗时：%d ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 
     return 0;
 }

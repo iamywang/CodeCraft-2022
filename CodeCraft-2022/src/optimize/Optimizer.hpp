@@ -56,13 +56,11 @@ public:
             // const int max_95_percent_index = std::ceil(g_site_bandwidth.site_name.size() * 0.95) - 1; // 95%分位的索引需要减去1
             const int max_95_percent_index = calculate_quantile_index(0.95,this->m_demand.mtime.size());
 
-            static long long total_used_time = 0; //以毫秒为单位
-            MyUtils::MyTimer::ProcessTimer process_timer;
             Dispather dispahter(this->m_demand);
             const int jiange = 50;
-            for (int i = 1; i < num_iteration; i++)
+            for (int i = 0; i < num_iteration; i++)
             {
-                if (i % jiange == 0 && total_used_time + process_timer.duration() > 610 * 1000)
+                if (i % jiange == 0 && MyUtils::Tools::getCurrentMillisecs() - g_start_time > 280 * 1000)
                 {
                     break;
                 }
@@ -129,7 +127,6 @@ public:
 #endif
             }
 
-            total_used_time += process_timer.duration();
         }
     };
 
