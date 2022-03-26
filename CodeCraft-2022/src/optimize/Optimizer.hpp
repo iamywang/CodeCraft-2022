@@ -60,7 +60,7 @@ public:
             const int jiange = 50;
             for (int i = 0; i < num_iteration; i++)
             {
-                if (i % jiange == 0 && MyUtils::Tools::getCurrentMillisecs() - g_start_time > 5 * 1000)
+                if (i % jiange == 0 && MyUtils::Tools::getCurrentMillisecs() - g_start_time > G_TOTAL_DURATION * 1000)
                 {
                     break;
                 }
