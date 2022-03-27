@@ -52,15 +52,18 @@ namespace optimize
                 {
                     int tmp = MyUtils::Tools::sum_column(X.flow, site_id);
                     X.sum_flow_site.push_back(tmp);
+                    X.idx_local_mtime = this->m_demand.get(X.mtime);
                 }
             }
 
             //根据时间对X_results进行排序
             std::sort(m_X_results.begin(), m_X_results.end(), [this](const ANSWER &a, const ANSWER &b)
-                      { return m_demand.get(a.mtime) < m_demand.get(b.mtime); });
+                      { return a.idx_global_mtime < b.idx_global_mtime; });
+
             // //根据时间对server_supported_flow_2_time_vec排序
             std::sort(m_server_supported_flow_2_time_vec.begin(), m_server_supported_flow_2_time_vec.end(), [this](const vector<SERVER_SUPPORTED_FLOW> &a, const vector<SERVER_SUPPORTED_FLOW> &b)
-                      { return m_demand.get(a[0].mtime) < m_demand.get(b[0].mtime); });
+                      { return a[0].idx_global_mtime < b[0].idx_global_mtime; });
+
             for (auto &v : m_server_supported_flow_2_time_vec)
             {
                 //按照server_id排序
@@ -95,22 +98,25 @@ namespace optimize
             for (auto &server_supported_flow : m_server_supported_flow_2_time_vec)
             {
                 const auto &mtime = server_supported_flow[0].mtime;
-                int index = m_demand.get(mtime);
+                const int index = server_supported_flow[0].idx_local_mtime;
+
+#ifdef TEST
                 if (index == -1)
                 {
                     char buf[1024];
                     sprintf(buf, "mtime: %s not found in demand", mtime.c_str());
                     throw runtime_error(string(buf));
                 }
+#endif
 
                 //取出对应时刻的demand
-                vector<int> &demand_at_mtime = m_demand.demand[m_demand.get(mtime)];
+                vector<int> &demand_at_mtime = m_demand.demand[index];
 
-                ANSWER ans;
+                ANSWER &ans = m_X_results[index];
+                ans.idx_global_mtime = m_demand.get_global_index(mtime);
+                ans.idx_local_mtime = index;
                 ans.mtime = mtime;
                 solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, server_supported_flow, ans);
-
-                m_X_results[m_demand.get(mtime)] = ans;
             }
         }
 
@@ -144,7 +150,12 @@ namespace optimize
                                                        g_site_bandwidth.bandwidth[server_id]);
 
                     server_supported_flow.push_back(SERVER_SUPPORTED_FLOW{
-                        m_demand.mtime[k], max_server_support_flow, server_id});
+                        .idx_global_mtime = m_demand.get_global_index(m_demand.mtime[k]),
+                        .idx_local_mtime = k,
+                        .mtime = m_demand.mtime[k],
+                        .max_flow = max_server_support_flow,
+                        .server_index = server_id});
+
                 }
                 //按照最大流量排序
                 std::sort(server_supported_flow.begin(), server_supported_flow.end(),

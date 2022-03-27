@@ -5,8 +5,8 @@
 
 using namespace global;
 
-// const static std::string base_path("/data/data_1/");
-const static std::string base_path("/data/");
+const static std::string base_path("/data/data_1/");
+// const static std::string base_path("/data/");
 
 
 const static char *file_names[] = {
@@ -88,6 +88,8 @@ void read_demand(DEMAND &g_demand)
             demand_vec.push_back(tmp);
         }
     }
+
+    global::g_demand.get(global::g_demand.mtime[0]);//防止后续多线程由于都是第一次访问get导致的同时写问题
 
     return;
 }

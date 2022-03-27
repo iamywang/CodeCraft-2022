@@ -83,7 +83,7 @@ public:
                 }
                 else
                 {
-                    int last_quantile_index = -1;
+                    int last_quantile_index = max_95_percent_index;
                     bool flag = false;
                     //更新一遍后5%的分位流量
                     for (int i = 96; i <= 100; i++)

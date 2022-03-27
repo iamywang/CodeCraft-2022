@@ -4,8 +4,11 @@ int g_qos_constraint = 0;
 SITE_BANDWIDTH g_site_bandwidth{};
 QOS g_qos{};
 int64_t g_start_time = 0;
-const int G_TOTAL_DURATION = 290;//秒
+const int G_TOTAL_DURATION = 285;//秒
+DEMAND DEMAND::s_demand{};
+
 namespace global
 {
-    DEMAND g_demand{};
+    // DEMAND g_demand{};
+    DEMAND& g_demand = DEMAND::s_demand;
 }

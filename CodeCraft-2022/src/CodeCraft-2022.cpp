@@ -7,6 +7,9 @@
 #include "optimize/Solver.hpp"
 #include "utils/Verifier.hpp"
 #include "utils/Thread/ThreadPoll.hpp"
+
+#define MULTI_THREAD
+
 extern void write_result(const std::vector<ANSWER> &X_results);
 
 const int NUM_MINIUM_PER_BLOCK = 200; //最小分组中每组最多有多少个元素
@@ -90,13 +93,13 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
         demand.clear();
         for (auto &X : X_results)
         {
-            demand.demand.push_back(global::g_demand.demand[global::g_demand.get(X.mtime)]);
-            demand.mtime.push_back(global::g_demand.mtime[global::g_demand.get(X.mtime)]);
+            demand.demand.push_back(global::g_demand.demand[X.idx_global_mtime]);
+            demand.mtime.push_back(global::g_demand.mtime[X.idx_global_mtime]);
         }
         for (auto &X : X_results_right)
         {
-            demand.demand.push_back(global::g_demand.demand[global::g_demand.get(X.mtime)]);
-            demand.mtime.push_back(global::g_demand.mtime[global::g_demand.get(X.mtime)]);
+            demand.demand.push_back(global::g_demand.demand[X.idx_global_mtime]);
+            demand.mtime.push_back(global::g_demand.mtime[X.idx_global_mtime]);
             X_results.push_back(X);
         }
 
@@ -145,7 +148,8 @@ int main()
 
     std::vector<ANSWER> X_results;
 
-    //*
+//*
+#ifdef MULTI_THREAD
     {
         vector<ANSWER> X_results_tmp[NUM_THREAD];
         vector<std::future<bool>> rets_vec;
@@ -166,7 +170,7 @@ int main()
         }
         rets_vec.clear();
 
-        vector<vector<ANSWER>*> X_results_vec_for_last_merge;
+        vector<vector<ANSWER> *> X_results_vec_for_last_merge;
         {
             //*
             int idx_begin = 0;
@@ -202,11 +206,11 @@ int main()
         task(0, global::g_demand.demand.size() - 1, 10000, false, X_results);
     }
     //*/
-
+#else
     {
-        // divide_conquer(0, global::g_demand.demand.size() - 1, X_results);
+        divide_conquer(0, global::g_demand.demand.size() - 1, X_results);
     }
-
+#endif
     // test_solver(X_results);
 
     if (Verifier(global::g_demand).verify(X_results))

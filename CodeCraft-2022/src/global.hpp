@@ -13,6 +13,7 @@ typedef struct _SITE_BANDWIDTH
 
 typedef struct _DEMAND
 {
+    static struct _DEMAND s_demand;//记录全局的demand
     std::vector<std::string> client_name;
     std::vector<std::string> mtime;
     std::vector<std::vector<int>> demand;
@@ -22,7 +23,7 @@ private:
 
 public:
     /**
-     * @brief 获取对应mtime的demand的索引
+     * @brief 获取对应mtime的demand的索引。这里获取的是局部索引
      *
      * @param time
      * @return int
@@ -36,7 +37,14 @@ public:
                 mtime_2_id[mtime[i]] = i;
             }
         }
-        return mtime_2_id[time];
+        int ret = mtime_2_id[time];
+        return ret;
+    }
+
+    int get_global_index(const std::string &time)
+    {
+        int ret = s_demand.get(time);
+        return ret;
     }
 
     void clear()
@@ -57,6 +65,8 @@ typedef struct _QOS
 
 typedef struct _ANSWER
 {
+    int idx_global_mtime;               //该解在当前时刻在global::g_demand中对应的时刻的index
+    int idx_local_mtime;                //该解在当前时刻在局部demand中对应的时刻的index
     std::string mtime;                  //时刻某个时刻的分配方案
     std::vector<std::vector<int>> flow; //行是客户，列是边缘节点
 
@@ -66,6 +76,8 @@ typedef struct _ANSWER
 
 typedef struct _SERVER_SUPPORTED_FLOW
 {
+    int idx_global_mtime; //该解在当前时刻在global::g_demand中对应的时刻的index
+    int idx_local_mtime;  //该解在当前时刻在局部demand中对应的时刻的index
     std::string mtime;
     int max_flow;
     int server_index;
@@ -79,6 +91,5 @@ extern const int G_TOTAL_DURATION;
 namespace global
 {
 
-    extern DEMAND g_demand;
-
+    extern DEMAND& g_demand;
 }

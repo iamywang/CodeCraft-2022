@@ -80,9 +80,9 @@ public:
                 }
 
                 int sum = std::accumulate(flow[client_id].begin(), flow[client_id].end(), 0); //客户的流量总和
-                if (sum != this->m_demand.demand[this->m_demand.get(X.mtime)][client_id])
+                if (sum != this->m_demand.demand[X.idx_local_mtime][client_id])
                 {
-                    cout << X.mtime << " " << client_id << " " << sum << " " << this->m_demand.demand[this->m_demand.get(X.mtime)][client_id] << endl;
+                    cout << X.mtime << " " << client_id << " " << sum << " " << this->m_demand.demand[X.idx_local_mtime][client_id] << endl;
                     cout << "sum is not equal demand" << endl;
                     return false;
                 }
