@@ -14,8 +14,7 @@ extern void write_result(const std::vector<ANSWER> &X_results);
 
 const int NUM_MINIUM_PER_BLOCK = 200; //最小分组中每组最多有多少个元素
 const int NUM_ITERATION = 200;        //最小分组的最大迭代次数
-const int NUM_THREAD = 4;
-static MyUtils::Thread::ThreadPool thread_pool(NUM_THREAD);
+
 
 /**
  * @brief 前闭后闭区间
@@ -160,7 +159,7 @@ int main()
             int right = (i + 1) * step - 1;
             if (right >= global::g_demand.demand.size())
                 right = global::g_demand.demand.size() - 1;
-            rets_vec.push_back(thread_pool.commit([=, &X_results_tmp]()
+            rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
                                                   { return divide_conquer(left, right, X_results_tmp[i]); }));
         }
         bool flag = true;
@@ -179,7 +178,7 @@ int main()
                 X_results_tmp[i].insert(X_results_tmp[i].end(), X_results_tmp[i + 1].begin(), X_results_tmp[i + 1].end());
                 X_results_vec_for_last_merge.push_back(&X_results_tmp[i]);
 
-                rets_vec.push_back(thread_pool.commit([=, &X_results_tmp]()
+                rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
                                                       { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 100, false, X_results_tmp[i]); }));
                 idx_begin += X_results_tmp[i].size();
             }

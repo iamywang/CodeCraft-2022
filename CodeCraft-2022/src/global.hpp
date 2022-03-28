@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
+#include "utils/Thread/ThreadPoll.hpp"
 
 typedef struct _SITE_BANDWIDTH
 {
@@ -88,6 +89,10 @@ extern SITE_BANDWIDTH g_site_bandwidth;
 extern QOS g_qos;
 extern int64_t g_start_time;
 extern const int G_TOTAL_DURATION;
+
+#define NUM_THREAD 4
+
+extern MyUtils::Thread::ThreadPool g_thread_pool;
 namespace global
 {
 
