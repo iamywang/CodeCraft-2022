@@ -1,5 +1,5 @@
 
-if(is_arch("linux")) then
+if(is_plat("linux")) then
     set_languages("cxx11")
     add_links("pthread")
 else
