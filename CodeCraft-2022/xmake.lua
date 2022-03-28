@@ -1,7 +1,12 @@
-set_languages("cxx11")
-add_cxxflags("-Wall -pedantic")
 
-add_links("pthread")
+if(is_arch("linux")) then
+    set_languages("cxx11")
+    add_links("pthread")
+else
+    -- windows
+    add_defines("NOMINMAX")
+end
+
 
 includes("src")
 
