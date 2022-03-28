@@ -92,7 +92,7 @@ public:
         {
             //下面计算成本
             int price = calculate_price(X_results);
-            printf("verify:总成本是 %d\n", price);
+            printf("verify:total price is %d\n", price);
         }
         return true;
     }

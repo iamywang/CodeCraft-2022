@@ -222,7 +222,7 @@ int main()
         printf("solve failed\n");
     }
 
-    printf("总耗时：%d ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
+    printf("Total time: %d ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 
     return 0;
 }

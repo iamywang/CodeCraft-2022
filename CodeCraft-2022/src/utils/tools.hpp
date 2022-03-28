@@ -126,49 +126,7 @@ namespace MyUtils
             }
         }
 
-        /**
-         * @brief
-         * 将16进制字符串转为十进制数字。要求字符串中必须满足正则表达式[a-fA-F0-9]+，字符串开头可以是0x或者0X，也可以没有前缀。
-         * @throw char*
-         * @return _T 转为十进制数字的类型
-         */
-        template <typename _T>
-        static _T hex2dec(const std::string &s)
-        {
-            auto begin = s.begin();
 
-            if (s[0] == '0' && (s[1] == 'x' || s[2] == 'X'))
-            {
-                begin += 2;
-            }
-
-            _T ret = 0;
-            while (begin < s.end())
-            {
-                ret <<= 4; // ret *= 16
-                if (*begin >= 'a' && *begin <= 'f')
-                {
-                    ret += *begin - 'a' + 10;
-                }
-                else if (*begin >= 'A' && *begin <= 'F')
-                {
-                    ret += *begin - 'A' + 10;
-                }
-                else if (*begin >= '0' && *begin <= '9')
-                {
-                    ret += *begin - '0';
-                }
-                else
-                {
-                    char temp[1024];
-                    sprintf(temp, "\"%s\" 不满足[a-fA-F0-9]+的正则条件",
-                            s.c_str());
-                    throw(temp);
-                }
-                ++begin;
-            }
-            return ret;
-        }
 
         /**
          * @brief 将字节流按照16进制打印到标准输出

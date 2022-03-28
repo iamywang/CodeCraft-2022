@@ -150,11 +150,11 @@ namespace optimize
                                                        g_site_bandwidth.bandwidth[server_id]);
 
                     server_supported_flow.push_back(SERVER_SUPPORTED_FLOW{
-                        .idx_global_mtime = m_demand.get_global_index(m_demand.mtime[k]),
-                        .idx_local_mtime = k,
-                        .mtime = m_demand.mtime[k],
-                        .max_flow = max_server_support_flow,
-                        .server_index = server_id});
+                        m_demand.get_global_index(m_demand.mtime[k]),
+                        k,
+                        m_demand.mtime[k],
+                        max_server_support_flow,
+                        server_id});
 
                 }
                 //按照最大流量排序
