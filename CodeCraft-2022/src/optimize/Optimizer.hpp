@@ -157,7 +157,7 @@ namespace optimize
                 {
                     int idx = calculate_quantile_index(0.95, this->m_demand.mtime.size());
 
-                    vector<SERVER_FLOW> flows_vec_quantile2;
+                    vector<SERVER_FLOW*> flows_vec_quantile2;
                     get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_demand.mtime.size()),
                                                     flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
                 }

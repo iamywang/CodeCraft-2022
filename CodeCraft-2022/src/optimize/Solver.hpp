@@ -9,6 +9,7 @@
 #include "../utils/tools.hpp"
 #include "Optimizer.hpp"
 #include "../utils/Verifier.hpp"
+#include "../utils/Graph/MaxFlow.hpp"
 
 using namespace std;
 
@@ -116,7 +117,7 @@ namespace optimize
                     sprintf(buf, "mtime: %s not found in demand", mtime.c_str());
                     throw runtime_error(string(buf));
                 }
-#endif  
+#endif
 
                 //取出对应时刻的demand
                 vector<int> &demand_at_mtime = m_demand.demand[index];
@@ -303,6 +304,70 @@ namespace optimize
                             demand[client_id] -= tmp;
                         }
                     }
+                }
+            }
+            return;
+        }
+
+        /**
+         * @brief 使用最大流算法计算初始解
+         *
+         * @param [in] demand
+         * @param [in] bandwidth
+         * @param [in] QOS
+         * @param [out] X
+         */
+        void solve_X2(vector<int> demand, // copy一份
+                      const vector<int> &bandwidth,
+                      const vector<vector<int>> &QOS,
+                      const vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
+                      ANSWER &ans //行代表客户，列表示边缘节点
+        )
+        {
+            const int num_vertexes = g_qos.site_name.size() + g_qos.client_name.size() + 2;
+            const int id_vertex_src = 0, id_vertex_dst = num_vertexes - 1;
+            const int id_base_vertex_site = g_qos.client_name.size() + 1;
+
+            Graph::Algorithm::MaxFlowGraph graph;
+            graph.initGraph(num_vertexes);
+            for (int client_id = 0; client_id < g_qos.client_name.size(); client_id++)
+            {
+                const int id_vertex_client = client_id + 1;
+
+                graph.addEdge(id_vertex_src, id_vertex_client, demand[client_id]);
+
+                for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+                {
+                    if (QOS[site_id][client_id] > 0)
+                    {
+                        graph.addEdge(id_vertex_client, site_id + id_base_vertex_site, g_site_bandwidth.bandwidth[site_id]);
+                    }
+                }
+            }
+
+            for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+            {
+                graph.addEdge(site_id + id_base_vertex_site, id_vertex_dst, g_site_bandwidth.bandwidth[site_id]);
+            }
+
+            int max_flow = graph.getMaxFlow(id_vertex_src, id_vertex_dst);
+
+            {
+                auto &edges = graph.getEdges();
+                auto &X = ans.flow;
+                //初始化X
+                X.resize(demand.size());
+                for (int i = 0; i < demand.size(); i++)
+                {
+                    X[i] = vector<int>(g_qos.site_name.size(), 0); //这里必须初始化为0
+                }
+                for (auto &edge : edges)
+                {
+                    if (edge.size() > 0 && edge[0].fromVertex > id_vertex_src && edge[0].toVertex < id_vertex_dst)
+                        for (auto &e : edge)
+                        {
+                            X[e.fromVertex - 1][e.toVertex - id_base_vertex_site] = e.flow;
+                        }
                 }
             }
             return;
