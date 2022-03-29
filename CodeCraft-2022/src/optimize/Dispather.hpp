@@ -21,15 +21,31 @@ namespace optimize
     private:
         const DEMAND &m_demand;
 
+        vector<vector<SERVER_FLOW>> &m_flows_vec_poll; //各行是对应的边缘节点在各个时刻的总的分配流量，保证各行是按照时间排序的
+        vector<vector<SERVER_FLOW *>> &m_flows_vec;    //各行是对应的边缘节点在各个时刻的总的分配流量，但是并不保证每一行都是按照时间排序的
+
+        const vector<vector<SERVER_SUPPORTED_FLOW>> &m_server_supported_flow_2_site_id_vec;
+        vector<ANSWER> &m_X_results;
+
     public:
-        Dispather(const DEMAND &demand) : m_demand(demand) {}
+        Dispather(const DEMAND &demand,
+                  vector<vector<SERVER_FLOW>> &flows_vec_poll_,
+                  vector<vector<SERVER_FLOW *>> &flows_vec_,
+                  const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_site_id_vec_,
+                  vector<ANSWER> &X_results_) : m_demand(demand),
+                                                m_flows_vec_poll(flows_vec_poll_),
+                                                m_flows_vec(flows_vec_),
+                                                m_server_supported_flow_2_site_id_vec(server_supported_flow_2_site_id_vec_),
+                                                m_X_results(X_results_)
+        {
+        }
         ~Dispather() {}
 
     private:
         bool update_X(ANSWER &X,
                       const vector<int> &flows_vec_95_according_site_id,
                       const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
-                      SERVER_FLOW &quantile_server_flow)
+                      const SERVER_FLOW &quantile_server_flow)
         {
             bool ret = false;
 
@@ -94,12 +110,10 @@ namespace optimize
                         }
                     }
 
-                    if (added > 0) //有剩下未分配的，需要进行恢复
-                    {
-                        X.sum_flow_site[server_id] -= added;
-                        X.sum_flow_site[quantile_server_flow.site_id] += added;
-                        // quantile_server_flow.flow += added;
-                    }
+                    X.sum_flow_site[server_id] -= added;
+                    X.sum_flow_site[quantile_server_flow.site_id] += added;
+                    m_flows_vec_poll[server_id][quantile_server_flow.ans_id].flow = X.sum_flow_site[server_id];
+                    m_flows_vec_poll[quantile_server_flow.site_id][quantile_server_flow.ans_id].flow = X.sum_flow_site[quantile_server_flow.site_id];
                 }
             }
             return ret;
@@ -116,16 +130,13 @@ namespace optimize
          * @return true
          * @return false
          */
-        bool dispath2(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_site_id_vec,
-                      const int quantile,
-                      vector<vector<SERVER_FLOW>> &flows_vec,
-                      vector<ANSWER> &X_results)
+        bool dispath2(const int quantile)
         {
             bool ret = false;
 
-            vector<SERVER_FLOW> flows_vec_quantile;
+            vector<SERVER_FLOW *> flows_vec_quantile;
             vector<int> flows_vec_quantile_according_site_id;
-            get_server_flow_vec_by_quantile(quantile, flows_vec, flows_vec_quantile, flows_vec_quantile_according_site_id);
+            get_server_flow_vec_by_quantile(quantile, m_flows_vec, flows_vec_quantile, flows_vec_quantile_according_site_id);
 
             vector<int> flows_vec_95_according_site_id(flows_vec_quantile_according_site_id.size(), 0);
             {
@@ -136,9 +147,9 @@ namespace optimize
                 }
                 else
                 {
-                    vector<SERVER_FLOW> flows_vec_quantile2;
+                    vector<SERVER_FLOW *> flows_vec_quantile2;
                     get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_demand.mtime.size()),
-                                                    flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
+                                                    m_flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
                 }
             }
 
@@ -153,7 +164,7 @@ namespace optimize
             {
                 vector<SERVER_FLOW> tmp;
                 get_server_flow_vec_by_quantile(calculate_quantile_index(0.8, this->m_demand.mtime.size()),
-                                                flows_vec,
+                                                m_flows_vec,
                                                 tmp,
                                                 flows_vec_low_limit_according_site_id);
             }
@@ -163,26 +174,23 @@ namespace optimize
             // for (int id_min_quantile = flows_vec_quantile.size() - 1; id_min_quantile >= 0; id_min_quantile--)//无法进行优化
             {
                 //*
-                SERVER_FLOW &min_quantile_server_flow = flows_vec_quantile[id_min_quantile];
-                ANSWER &X = X_results[min_quantile_server_flow.ans_id];
-                const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = server_supported_flow_2_site_id_vec[min_quantile_server_flow.ans_id];
+                SERVER_FLOW &min_quantile_server_flow = *flows_vec_quantile[id_min_quantile];
+                ANSWER &X = m_X_results[min_quantile_server_flow.ans_id];
+                const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[min_quantile_server_flow.ans_id];
 
                 ret = update_X(X, flows_vec_95_according_site_id, server_supported_flow, min_quantile_server_flow);
             }
             return ret;
         }
 
-        bool dispath(const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_site_id_vec,
-                     const int max_95_percent_index,
-                     vector<vector<SERVER_FLOW>> &flows_vec,
-                     vector<ANSWER> &X_results)
+        bool dispath(const int max_95_percent_index)
         {
             bool ret = false;
 
-            vector<SERVER_FLOW> flows_vec_95_percent;
+            vector<SERVER_FLOW *> flows_vec_95_percent;
             vector<int> flows_vec_95_according_site_id;
             get_server_flow_vec_by_quantile(max_95_percent_index,
-                                            flows_vec,
+                                            m_flows_vec,
                                             flows_vec_95_percent,
                                             flows_vec_95_according_site_id);
 
@@ -196,9 +204,9 @@ namespace optimize
             for (int id_max_95 = flows_vec_95_percent.size() - 1; id_max_95 >= 0; id_max_95--)
             {
                 //*
-                SERVER_FLOW &max_95_server_flow = flows_vec_95_percent[id_max_95];
-                ANSWER &X = X_results[max_95_server_flow.ans_id];
-                const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = server_supported_flow_2_site_id_vec[max_95_server_flow.ans_id];
+                SERVER_FLOW &max_95_server_flow = *flows_vec_95_percent[id_max_95];
+                ANSWER &X = m_X_results[max_95_server_flow.ans_id];
+                const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[max_95_server_flow.ans_id];
 
                 ret = update_X(X,
                                flows_vec_95_according_site_id,

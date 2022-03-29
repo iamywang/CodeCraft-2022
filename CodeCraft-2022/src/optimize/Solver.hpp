@@ -44,6 +44,15 @@ namespace optimize
             {
                 // vector<ANSWER> X_results;
                 generate_initial_X_results();
+                // for (auto &X : m_X_results)
+                // {
+                //     X.sum_flow_site.resize(0);
+                //     for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+                //     {
+                //         int sum_flow = MyUtils::Tools::sum_column(X.flow, site_id);
+                //         X.sum_flow_site.push_back(sum_flow);
+                //     }
+                // }
             }
 
             for (auto &X : m_X_results)
@@ -71,7 +80,7 @@ namespace optimize
                           { return a.server_index < b.server_index; });
             }
 
-            Optimizer(this->m_demand).optimize(m_server_supported_flow_2_time_vec, m_X_results, num_iteration);
+            Optimizer(this->m_demand, m_X_results).optimize(m_server_supported_flow_2_time_vec, num_iteration);
 #ifdef TEST
             if (Verifier(this->m_demand).verify(m_X_results))
             {
@@ -107,7 +116,7 @@ namespace optimize
                     sprintf(buf, "mtime: %s not found in demand", mtime.c_str());
                     throw runtime_error(string(buf));
                 }
-#endif
+#endif  
 
                 //取出对应时刻的demand
                 vector<int> &demand_at_mtime = m_demand.demand[index];
@@ -155,7 +164,6 @@ namespace optimize
                         m_demand.mtime[k],
                         max_server_support_flow,
                         server_id});
-
                 }
                 //按照最大流量排序
                 std::sort(server_supported_flow.begin(), server_supported_flow.end(),
@@ -236,7 +244,7 @@ namespace optimize
 
             const static int max_5_percent_flow_size = demand.size() - (int)((demand.size() - 1) * 0.95 + 1) + 1;
 
-            vector<int> flow_server_left(server_supported_flow.size(), 0); //记录每个边缘节点还剩下多少流量可以恩培
+            vector<int> flow_server_left(server_supported_flow.size(), 0); //记录每个边缘节点还剩下多少流量可以分配
             for (const auto &i : server_supported_flow)
             {
                 flow_server_left[i.server_index] = i.max_flow;

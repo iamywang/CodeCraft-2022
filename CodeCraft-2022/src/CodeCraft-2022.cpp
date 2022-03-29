@@ -15,7 +15,6 @@ extern void write_result(const std::vector<ANSWER> &X_results);
 const int NUM_MINIUM_PER_BLOCK = 200; //最小分组中每组最多有多少个元素
 const int NUM_ITERATION = 200;        //最小分组的最大迭代次数
 
-
 /**
  * @brief 前闭后闭区间
  *
@@ -145,6 +144,12 @@ int main()
     read_site_bandwidth(g_site_bandwidth);
     read_qos(g_qos);
 
+    {
+        cout << "时刻数量: " << global::g_demand.mtime.size() << endl;
+        cout << "客户端数量：" << global::g_demand.client_name.size() << endl;
+        cout << "服务器数量: " << g_qos.site_name.size() << endl;
+    }
+
     std::vector<ANSWER> X_results;
 
 //*
@@ -160,7 +165,7 @@ int main()
             if (right >= global::g_demand.demand.size())
                 right = global::g_demand.demand.size() - 1;
             rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
-                                                  { return divide_conquer(left, right, X_results_tmp[i]); }));
+                                                    { return divide_conquer(left, right, X_results_tmp[i]); }));
         }
         bool flag = true;
         for (auto &ret : rets_vec)
@@ -179,7 +184,7 @@ int main()
                 X_results_vec_for_last_merge.push_back(&X_results_tmp[i]);
 
                 rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
-                                                      { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 100, false, X_results_tmp[i]); }));
+                                                        { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 100, false, X_results_tmp[i]); }));
                 idx_begin += X_results_tmp[i].size();
             }
 
@@ -221,7 +226,7 @@ int main()
         printf("solve failed\n");
     }
 
-    printf("Total time: %d ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
+    printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 
     return 0;
 }

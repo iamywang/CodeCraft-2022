@@ -12,7 +12,7 @@ namespace optimize
      * @param [out] flows_vec_quantile_vec_idx 按照site_id进行索引的第quantile的流量值
      */
     void get_server_flow_vec_by_quantile(const int quantile,
-                                         vector<vector<SERVER_FLOW>> &flows_vec,
-                                         vector<SERVER_FLOW> &flows_vec_quantile,
+                                         vector<vector<SERVER_FLOW*>> &flows_vec,
+                                         vector<SERVER_FLOW*> &flows_vec_quantile,
                                          vector<int> &flows_vec_quantile_according_site_id);
 } // namespace optimize
