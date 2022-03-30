@@ -4,7 +4,7 @@
 #include "data_in_out/DataIn.hpp"
 #include "utils/ProcessTimer.hpp"
 #include "optimize/optimize_interface.hpp"
-#include "optimize/Solver.hpp"
+#include "solve/Solver.hpp"
 #include "utils/Verifier.hpp"
 #include "utils/Thread/ThreadPoll.hpp"
 
@@ -51,7 +51,7 @@ bool task(const int left,
         //*/
 
     //*
-    optimize::Solver solver(X_results, demand);
+    solve::Solver solver(X_results, demand);
     if (solver.solve(num_iteration, is_generated_initial_results) == 0)
     {
         return true;
@@ -118,7 +118,7 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
             {
                 num_iteration = 200;
             }
-            optimize::Solver solver(X_results, demand);
+            solve::Solver solver(X_results, demand);
             if (solver.solve(num_iteration, false) == 0)
             {
                 return true;

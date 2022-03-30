@@ -4,6 +4,7 @@ add_cxxflags("-Wall -pedantic")
 includes("utils")
 includes("data_in_out")
 includes("optimize")
+includes("solve")
 
 
 target("CodeCraft-2021")

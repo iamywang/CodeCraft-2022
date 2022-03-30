@@ -1,103 +1,15 @@
 #pragma once
-
-#include <iostream>
-#include <functional>
-#include <numeric>
-#include <algorithm>
-#include <queue>
-#include "optimize_interface.hpp"
-#include "../utils/tools.hpp"
-#include "Optimizer.hpp"
-#include "../utils/Verifier.hpp"
+#include "ResultGenerator.hpp"
 #include "../utils/Graph/MaxFlow.hpp"
-
-using namespace std;
-
-namespace optimize
+namespace solve
 {
-    typedef struct _MAX_5_PERCENT_FLOW
-    {
-        // max priority queue
-        priority_queue<int, vector<int>, greater<int>> max_flow_queue;
-    } MAX_5_PERCENT_FLOW;
-
-    class Solver
+    class XSolverGreedyAlgorithm : ResultGenerator
     {
     private:
-        vector<MAX_5_PERCENT_FLOW> m_max_5_percent_flow_vec; //边缘节点对应的能存储的最大的5%流量
-
-        vector<vector<SERVER_SUPPORTED_FLOW>> m_server_supported_flow_2_time_vec;
-        DEMAND m_demand;
-
     public:
-        std::vector<ANSWER> &m_X_results;
+        XSolverGreedyAlgorithm(CommonDataForResultGenrator &common_data) : ResultGenerator(common_data) {}
+        ~XSolverGreedyAlgorithm() {}
 
-    public:
-        Solver(std::vector<ANSWER> &X_results, const DEMAND &demand) : m_X_results(X_results), m_demand(demand)
-        {
-        }
-        ~Solver() {}
-
-        int solve(const int num_iteration, const bool is_generate_initial_results)
-        {
-            sort_by_demand_and_qos(m_server_supported_flow_2_time_vec);
-            if (is_generate_initial_results)
-            {
-                // vector<ANSWER> X_results;
-                generate_initial_X_results();
-                // for (auto &X : m_X_results)
-                // {
-                //     X.sum_flow_site.resize(0);
-                //     for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-                //     {
-                //         int sum_flow = MyUtils::Tools::sum_column(X.flow, site_id);
-                //         X.sum_flow_site.push_back(sum_flow);
-                //     }
-                // }
-            }
-
-            for (auto &X : m_X_results)
-            {
-                for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-                {
-                    int tmp = MyUtils::Tools::sum_column(X.flow, site_id);
-                    X.sum_flow_site.push_back(tmp);
-                    X.idx_local_mtime = this->m_demand.get(X.mtime);
-                }
-            }
-
-            //根据时间对X_results进行排序
-            std::sort(m_X_results.begin(), m_X_results.end(), [this](const ANSWER &a, const ANSWER &b)
-                      { return a.idx_global_mtime < b.idx_global_mtime; });
-
-            // //根据时间对server_supported_flow_2_time_vec排序
-            std::sort(m_server_supported_flow_2_time_vec.begin(), m_server_supported_flow_2_time_vec.end(), [this](const vector<SERVER_SUPPORTED_FLOW> &a, const vector<SERVER_SUPPORTED_FLOW> &b)
-                      { return a[0].idx_global_mtime < b[0].idx_global_mtime; });
-
-            for (auto &v : m_server_supported_flow_2_time_vec)
-            {
-                //按照server_id排序
-                std::sort(v.begin(), v.end(), [](const SERVER_SUPPORTED_FLOW &a, const SERVER_SUPPORTED_FLOW &b)
-                          { return a.server_index < b.server_index; });
-            }
-
-            Optimizer(this->m_demand, m_X_results).optimize(m_server_supported_flow_2_time_vec, num_iteration);
-#ifdef TEST
-            if (Verifier(this->m_demand).verify(m_X_results))
-            {
-                cout << "verify success" << endl;
-            }
-
-            else
-            {
-                printf("verify failed\n");
-                return -1;
-            }
-#endif
-            return 0;
-        }
-
-    private:
         void generate_initial_X_results()
         {
             m_max_5_percent_flow_vec.clear();
@@ -130,73 +42,7 @@ namespace optimize
             }
         }
 
-        /**
-         * @brief
-         *
-         * @param [out] server_supported_flow 边缘节点在各个时刻可提供的最大流量。每一行都是每个时刻各个边缘节点可以为当前所有客户端提供的最大流量。
-         */
-        void
-        sort_by_demand_and_qos(vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_time_vec)
-        {
-
-            for (int k = 0; k < m_demand.demand.size(); k++)
-            {
-                vector<SERVER_SUPPORTED_FLOW> server_supported_flow;
-
-                const auto &line_demand = m_demand.demand[k];
-
-                for (int server_id = 0; server_id < g_qos.site_name.size(); server_id++) //遍历边缘节点
-                {
-                    int max_server_support_flow = 0;                                     //边缘节点为当前时刻所有客户可支持的最大流量
-                    for (int client_id = 0; client_id < line_demand.size(); client_id++) //遍历每一个客户的需求
-                    {
-                        if (g_qos.qos[server_id][client_id] > 0) //需要满足QOS
-                        {
-                            max_server_support_flow += line_demand[client_id];
-                        }
-                    }
-
-                    max_server_support_flow = std::min(max_server_support_flow,
-                                                       g_site_bandwidth.bandwidth[server_id]);
-
-                    server_supported_flow.push_back(SERVER_SUPPORTED_FLOW{
-                        m_demand.get_global_index(m_demand.mtime[k]),
-                        k,
-                        m_demand.mtime[k],
-                        max_server_support_flow,
-                        server_id});
-                }
-                //按照最大流量排序
-                std::sort(server_supported_flow.begin(), server_supported_flow.end(),
-                          [](const SERVER_SUPPORTED_FLOW &a, const SERVER_SUPPORTED_FLOW &b)
-                          {
-                              return a.max_flow > b.max_flow;
-                          });
-
-                server_supported_flow_2_time_vec.push_back(server_supported_flow);
-            }
-
-            //对server_supported_flow_2_time_vec按从大到小排序
-            std::sort(server_supported_flow_2_time_vec.begin(), server_supported_flow_2_time_vec.end(),
-                      [](const vector<SERVER_SUPPORTED_FLOW> &a, const vector<SERVER_SUPPORTED_FLOW> &b)
-                      {
-                          return a[0].max_flow > b[0].max_flow;
-                      });
-
-            //打印server_supported_flow_2_time_vec
-            // for(const auto& vec: server_supported_flow_2_time_vec)
-            // {
-            //     cout << vec[0].mtime << ": \n";
-            //     for(const auto& flow: vec)
-            //     {
-            //         cout << flow.max_flow << " " << flow.server_index << endl;
-            //     }
-            //     cout << "\n\n\n";
-            // }
-
-            return;
-        }
-
+    private:
         int pick_server(const vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
                         int max_5_percent_flow_size)
         {
@@ -308,19 +154,46 @@ namespace optimize
             }
             return;
         }
+    };
 
-        /**
+    class XSolverMaxFlow : ResultGenerator
+    {
+    private:
+    public:
+        XSolverMaxFlow(CommonDataForResultGenrator &common_data) : ResultGenerator(common_data) {}
+        ~XSolverMaxFlow() {}
+        void generate_initial_X_results()
+        {
+            m_X_results.resize(m_demand.mtime.size());
+            // 求解每一时刻的X
+            for (int index = 0; index < m_demand.mtime.size(); index++)
+            {
+                const string &mtime = m_demand.mtime[index];
+
+                //取出对应时刻的demand
+                vector<int> &demand_at_mtime = m_demand.demand[index];
+
+                ANSWER &ans = m_X_results[index];
+                ans.idx_global_mtime = m_demand.get_global_index(mtime);
+                ans.idx_local_mtime = index;
+                ans.mtime = mtime;
+                solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, ans);
+            }
+            return;
+        }
+
+    private:
+            /**
          * @brief 使用最大流算法计算初始解
          *
          * @param [in] demand
          * @param [in] bandwidth
          * @param [in] QOS
-         * @param [out] X
+         * @param [out] ans
          */
-        void solve_X2(vector<int> demand, // copy一份
+        void solve_X(const vector<int>& demand,
                       const vector<int> &bandwidth,
                       const vector<vector<int>> &QOS,
-                      const vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
                       ANSWER &ans //行代表客户，列表示边缘节点
         )
         {
@@ -374,4 +247,4 @@ namespace optimize
         }
     };
 
-} // namespace optimize
+} // namespace solve
