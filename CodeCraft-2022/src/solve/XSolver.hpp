@@ -39,6 +39,11 @@ namespace solve
                 ans.idx_local_mtime = index;
                 ans.mtime = mtime;
                 solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, server_supported_flow, ans);
+                for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+                {
+                    int tmp = MyUtils::Tools::sum_column(ans.flow, site_id);
+                    ans.sum_flow_site.push_back(tmp);
+                }
             }
         }
 
@@ -178,12 +183,17 @@ namespace solve
                 ans.idx_local_mtime = index;
                 ans.mtime = mtime;
                 solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, ans);
+                for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+                {
+                    int tmp = MyUtils::Tools::sum_column(ans.flow, site_id);
+                    ans.sum_flow_site.push_back(tmp);
+                }
             }
             return;
         }
 
     private:
-            /**
+        /**
          * @brief 使用最大流算法计算初始解
          *
          * @param [in] demand
@@ -191,10 +201,10 @@ namespace solve
          * @param [in] QOS
          * @param [out] ans
          */
-        void solve_X(const vector<int>& demand,
-                      const vector<int> &bandwidth,
-                      const vector<vector<int>> &QOS,
-                      ANSWER &ans //行代表客户，列表示边缘节点
+        void solve_X(const vector<int> &demand,
+                     const vector<int> &bandwidth,
+                     const vector<vector<int>> &QOS,
+                     ANSWER &ans //行代表客户，列表示边缘节点
         )
         {
             const int num_vertexes = g_qos.site_name.size() + g_qos.client_name.size() + 2;
