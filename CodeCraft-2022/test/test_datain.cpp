@@ -33,6 +33,7 @@ int main()
         cout << "时刻数量: " << global::g_demand.mtime.size() << endl;
         cout << "客户端数量：" << global::g_demand.client_name.size() << endl;
         cout << "服务器数量: " << g_qos.site_name.size() << endl;
+        cout << "最小成本: " << g_minimum_cost << endl;
     }
 
     return 0;

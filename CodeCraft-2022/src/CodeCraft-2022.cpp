@@ -139,7 +139,7 @@ int main()
 {
     g_start_time = MyUtils::Tools::getCurrentMillisecs();
 
-    g_qos_constraint = read_qos_constraint();
+    read_configure(g_qos_constraint, g_minimum_cost);
     read_demand(global::g_demand);
     read_site_bandwidth(g_site_bandwidth);
     read_qos(g_qos);
@@ -148,6 +148,7 @@ int main()
         cout << "时刻数量: " << global::g_demand.mtime.size() << endl;
         cout << "客户端数量：" << global::g_demand.client_name.size() << endl;
         cout << "服务器数量: " << g_qos.site_name.size() << endl;
+        cout << "最小成本: " << g_minimum_cost << endl;
     }
 
     std::vector<ANSWER> X_results;
