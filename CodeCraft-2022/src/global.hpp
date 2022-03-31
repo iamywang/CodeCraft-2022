@@ -21,6 +21,13 @@ typedef struct _SITE_BANDWIDTH
 {
     std::vector<std::string> site_name;
     std::vector<int> bandwidth;
+
+    struct _inner_data{
+        int id_server;
+        int bandwidth;
+    };
+    std::vector<_inner_data> bandwidth_sorted_by_bandwidth_ascending_order;//根据banddwidth从大到小排序
+
 } SITE_BANDWIDTH;
 extern SITE_BANDWIDTH g_site_bandwidth;
 

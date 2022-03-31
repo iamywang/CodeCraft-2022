@@ -154,6 +154,16 @@ void read_site_bandwidth(SITE_BANDWIDTH &site_bandwidth)
         }
     }
 
+    for(int id = 0; id < g_site_bandwidth.bandwidth.size(); id++)
+    {
+        g_site_bandwidth.bandwidth_sorted_by_bandwidth_ascending_order.push_back({id, g_site_bandwidth.bandwidth[id]});
+    }
+    std::sort(g_site_bandwidth.bandwidth_sorted_by_bandwidth_ascending_order.begin(),
+                g_site_bandwidth.bandwidth_sorted_by_bandwidth_ascending_order.end(),
+                [](const SITE_BANDWIDTH::_inner_data &a, const SITE_BANDWIDTH::_inner_data &b) {
+                    return a.bandwidth > b.bandwidth;
+                });
+
     return;
 }
 

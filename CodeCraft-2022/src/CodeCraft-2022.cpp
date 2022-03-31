@@ -8,7 +8,7 @@
 #include "utils/Verifier.hpp"
 #include "utils/Thread/ThreadPoll.hpp"
 
-#define MULTI_THREAD
+// #define MULTI_THREAD
 
 extern void write_result(const std::vector<ANSWER> &X_results);
 

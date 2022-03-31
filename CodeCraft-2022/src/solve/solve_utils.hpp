@@ -24,6 +24,7 @@ namespace solve
         sort_by_demand_and_qos(DEMAND &demand,
                                vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_time_vec)
         {
+            /*
             server_supported_flow_2_time_vec.clear();
             for (int k = 0; k < demand.demand.size(); k++)
             {
@@ -68,7 +69,7 @@ namespace solve
                       {
                           return a[0].max_flow > b[0].max_flow;
                       });
-
+//*/
             return;
         }
     };

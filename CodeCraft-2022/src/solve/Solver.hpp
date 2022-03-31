@@ -48,7 +48,7 @@ namespace solve
             {
                 m_result_generator->generate_initial_X_results();
             }
-
+/*
             for (auto &X : X_results)
             {
                 X.idx_local_mtime = demand.get(X.mtime);
@@ -82,6 +82,7 @@ namespace solve
                 return -1;
             }
 #endif
+//*/
             return 0;
         }
     };
