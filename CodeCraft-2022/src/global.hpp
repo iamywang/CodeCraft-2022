@@ -12,12 +12,20 @@ typedef struct _SITE_BANDWIDTH
     std::vector<int> bandwidth;
 } SITE_BANDWIDTH;
 
+typedef struct _STREAM_CLIENT_DEMAND
+{
+    std::vector<std::string> id_local_stream_2_stream_name;
+    std::map<std::string, int> stream_name_2_id_local_stream;
+    std::vector<std::vector<int>> stream_2_client_demand; //各行是各个流对每个客户的需求。列是客户端的id
+} STREAM_CLIENT_DEMAND;
+
 typedef struct _DEMAND
 {
-    static struct _DEMAND s_demand;//记录全局的demand
+    static struct _DEMAND s_demand; //记录全局的demand
     std::vector<std::string> client_name;
     std::vector<std::string> mtime;
-    std::vector<std::vector<int>> demand;
+    // std::vector<std::vector<int>> demand;
+    std::vector<STREAM_CLIENT_DEMAND> demand;
 
 private:
     std::map<std::string, int> mtime_2_id;
@@ -85,6 +93,7 @@ typedef struct _SERVER_SUPPORTED_FLOW
 } SERVER_SUPPORTED_FLOW;
 
 extern int g_qos_constraint;
+extern int g_minimum_cost;//最低成本
 extern SITE_BANDWIDTH g_site_bandwidth;
 extern QOS g_qos;
 extern int64_t g_start_time;
@@ -96,5 +105,5 @@ extern MyUtils::Thread::ThreadPool g_thread_pool;
 namespace global
 {
 
-    extern DEMAND& g_demand;
+    extern DEMAND &g_demand;
 }
