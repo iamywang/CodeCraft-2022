@@ -155,7 +155,7 @@ typedef struct _ANSWER
             }
             else
             {
-                cost = double((flow - g_minimum_cost) * (flow - g_minimum_cost) + flow) / (double(g_site_bandwidth.bandwidth[id_server]));
+                cost = double((flow - g_minimum_cost) * (flow - g_minimum_cost)) / (double(g_site_bandwidth.bandwidth[id_server])) + flow;
             }
         }
         return cost;
