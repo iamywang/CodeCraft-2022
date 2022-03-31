@@ -8,7 +8,6 @@ using namespace global;
 // const static std::string base_path("/data/data_1/");
 const static std::string base_path("/data/");
 
-
 const static char *file_names[] = {
     "config.ini",
     "demand.csv",
@@ -103,7 +102,7 @@ void read_demand(DEMAND &g_demand)
             }
             else
             {
-                STREAM_CLIENT_DEMAND &stream_client_demand  = demand_vec.back();
+                STREAM_CLIENT_DEMAND &stream_client_demand = demand_vec.back();
                 stream_client_demand.id_local_stream_2_stream_name.push_back(con[1]);
                 stream_client_demand.stream_name_2_id_local_stream.insert(std::make_pair(con[1], stream_client_demand.id_local_stream_2_stream_name.size() - 1));
                 std::vector<int> tmp;
@@ -116,7 +115,7 @@ void read_demand(DEMAND &g_demand)
         }
     }
 
-    global::g_demand.get(global::g_demand.mtime[0]);//防止后续多线程由于都是第一次访问get导致的同时写问题
+    global::g_demand.get(global::g_demand.mtime[0]); //防止后续多线程由于都是第一次访问get导致的同时写问题
 
     return;
 }
@@ -171,7 +170,7 @@ void read_qos(QOS &qos)
             for (int j = 0; j < client_num; j++)
             {
                 qos_vec[i][j] = rand() % 600 + 1;
-                if(qos_vec[i][j] >= g_qos_constraint)
+                if (qos_vec[i][j] >= g_qos_constraint)
                 {
                     qos_vec[i][j] = 0;
                 }
@@ -226,6 +225,9 @@ void read_qos(QOS &qos)
             }
         }
     }
+
+    g_num_server = g_qos.site_name.size();
+    g_num_client = g_qos.client_name.size();
 
     return;
 }

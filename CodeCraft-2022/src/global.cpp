@@ -7,6 +7,8 @@ int64_t g_start_time = 0;
 const int G_TOTAL_DURATION = 285;//秒
 DEMAND DEMAND::s_demand{};
 MyUtils::Thread::ThreadPool g_thread_pool(NUM_THREAD);
+int g_num_client = 0;
+int g_num_server = 0;
 
 namespace global
 {
