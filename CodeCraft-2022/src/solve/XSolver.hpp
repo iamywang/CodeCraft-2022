@@ -60,7 +60,7 @@ namespace solve
                     }
                     for (auto &b : bandwidth_sorted)
                     {
-                        if (b.bandwidth < demand.stream_2_client_demand[id_stream][id_client])
+                        if (b.bandwidth < demand.stream_2_client_demand[id_stream][id_client] || g_qos.qos[id_client][b.id_server] == 0)
                         {
                             continue;
                         }
