@@ -3,7 +3,7 @@
 #include "../utils/utils.hpp"
 #include "../global.hpp"
 
-int read_qos_constraint();
+void read_configure(int &qos_constraint, int &minimum_cost);
 
 void read_demand(DEMAND &demand);
 

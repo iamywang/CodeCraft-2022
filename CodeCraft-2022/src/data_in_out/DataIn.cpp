@@ -5,8 +5,8 @@
 
 using namespace global;
 
-const static std::string base_path("/data/data_1/");
-// const static std::string base_path("/data/");
+// const static std::string base_path("/data/data_1/");
+const static std::string base_path("/data/");
 
 
 const static char *file_names[] = {
@@ -24,11 +24,12 @@ const static int T = 8928;
 std::map<std::string, int> client_idx;
 std::map<std::string, int> site_idx;
 
-int read_qos_constraint()
+void read_configure(int &qos_constraint, int &minimum_cost)
 {
     if (generate_fake_data)
     {
-        return 400;
+        qos_constraint = 400;
+        minimum_cost = 400;
     }
     else
     {
@@ -39,8 +40,10 @@ int read_qos_constraint()
         {
             auto tmp = MyUtils::Tools::split(lines[1], "=");
             qos_constraint = std::stoi(tmp[1]);
+
+            tmp = MyUtils::Tools::split(lines[2], "=");
+            minimum_cost = std::stoi(tmp[1]);
         }
-        return qos_constraint;
     }
 }
 
@@ -55,11 +58,11 @@ void read_demand(DEMAND &g_demand)
         mtime.resize(T);
         for (int i = 0; i < T; i++)
         {
-            demand_vec[i].resize(client_num);
+            // demand_vec[i].resize(client_num);
             mtime[i] = "mtime_" + std::to_string(i);
             for (int j = 0; j < client_num; j++)
             {
-                demand_vec[i][j] = rand() % 10000 + 1;
+                // demand_vec[i][j] = rand() % 10000 + 1;
             }
         }
     }
@@ -71,21 +74,45 @@ void read_demand(DEMAND &g_demand)
         auto &client_name = g_demand.client_name;
 
         int cidx = 0;
-        for (auto p = demand.m_header.begin() + 1; p != demand.m_header.end(); p++)
+        for (auto p = demand.m_header.begin() + 2; p != demand.m_header.end(); p++)
         {
             client_name.push_back(*p);
             client_idx.insert(std::make_pair(*p, cidx++));
         }
 
+        std::string last_time = "";
         for (auto &con : demand.m_content)
         {
-            std::vector<int> tmp;
-            mtime.push_back(con[0]);
-            for (auto p = con.begin() + 1; p != con.end(); p++)
+            // 判断是否为同一时刻
+            if (con[0] != last_time)
             {
-                tmp.push_back(std::stoi(*p));
+                mtime.push_back(con[0]);
+                last_time = con[0];
+
+                STREAM_CLIENT_DEMAND stream_client_demand;
+                stream_client_demand.id_local_stream_2_stream_name.push_back(con[1]);
+                stream_client_demand.stream_name_2_id_local_stream.insert(std::make_pair(con[1], 0));
+                std::vector<int> tmp;
+                for (auto p = con.begin() + 2; p != con.end(); p++)
+                {
+                    tmp.push_back(std::stoi(*p));
+                }
+                stream_client_demand.stream_2_client_demand.push_back(tmp);
+
+                demand_vec.push_back(stream_client_demand);
             }
-            demand_vec.push_back(tmp);
+            else
+            {
+                STREAM_CLIENT_DEMAND &stream_client_demand  = demand_vec.back();
+                stream_client_demand.id_local_stream_2_stream_name.push_back(con[1]);
+                stream_client_demand.stream_name_2_id_local_stream.insert(std::make_pair(con[1], stream_client_demand.id_local_stream_2_stream_name.size() - 1));
+                std::vector<int> tmp;
+                for (auto p = con.begin() + 2; p != con.end(); p++)
+                {
+                    tmp.push_back(std::stoi(*p));
+                }
+                stream_client_demand.stream_2_client_demand.push_back(tmp);
+            }
         }
     }
 
