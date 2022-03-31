@@ -77,9 +77,9 @@ typedef struct _ANSWER
     int idx_global_mtime;               //该解在当前时刻在global::g_demand中对应的时刻的index
     int idx_local_mtime;                //该解在当前时刻在局部demand中对应的时刻的index
     std::string mtime;                  //时刻某个时刻的分配方案
-    std::vector<std::vector<int>> flow; //行是客户，列是边缘节点
-
-    std::vector<int> sum_flow_site; //各列的流量之和，也即是边缘节点分配给各个客户端的流量的总和
+    std::vector<std::vector<int>> stream2server_id; //行是stream,列是client，值是server_id
+    std::vector<int> sum_flow_site; //各个服务器的实际总流量
+    std::vector<int> cost;//各个服务器的成本
 
 } ANSWER;
 
