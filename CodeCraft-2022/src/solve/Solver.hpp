@@ -28,7 +28,8 @@ namespace solve
 
     public:
         Solver(std::vector<ANSWER> &X_results,
-               const DEMAND &demand) : m_common_data(demand, X_results)
+               const DEMAND &demand,
+               std::vector<int>&& idx_global_demand) : m_common_data(demand, X_results, std::move(idx_global_demand))
         {
             m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm(m_common_data);
             // m_result_generator = (ResultGenerator *)new XSolverMaxFlow(m_common_data);
@@ -42,7 +43,9 @@ namespace solve
             auto &X_results = m_common_data.m_X_results;
             auto &demand = m_common_data.m_demand;
 
-            solve::Utils::sort_by_demand_and_qos(demand, server_supported_flow_2_time_vec);
+            // solve::Utils::sort_by_demand_and_qos(demand, m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
+            solve::Utils::sort_by_demand_and_qos(m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
+
 
             if (is_generate_initial_results)
             {

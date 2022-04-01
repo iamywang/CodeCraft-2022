@@ -21,15 +21,20 @@ namespace solve
          * @return server_supported_flow 边缘节点在各个时刻可提供的最大流量。每一行都是每个时刻各个边缘节点可以为当前所有客户端提供的最大流量。且按照流量从大到小排序
          */
         static void
-        sort_by_demand_and_qos(DEMAND &demand,
+        sort_by_demand_and_qos(
+            // DEMAND &demand,
+                                const std::vector<int> &idx_global_demand,
                                vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_time_vec)
         {
             server_supported_flow_2_time_vec.clear();
-            for (int k = 0; k < demand.client_demand.size(); k++)
+            // for (int k = 0; k < demand.client_demand.size(); k++)
+            for (int k = 0; k < idx_global_demand.size(); k++)
             {
                 vector<SERVER_SUPPORTED_FLOW> server_supported_flow;
 
-                const auto &line_demand = demand.client_demand[k];
+                // const auto &line_demand = demand.client_demand[k];
+                const auto &line_demand = global::g_demand.client_demand[idx_global_demand[k]];
+
 
                 for (int server_id = 0; server_id < g_qos.site_name.size(); server_id++) //遍历边缘节点
                 {
@@ -46,9 +51,11 @@ namespace solve
                                                        g_site_bandwidth.bandwidth[server_id]);
 
                     server_supported_flow.push_back(SERVER_SUPPORTED_FLOW{
-                        demand.get_global_index(demand.mtime[k]),
+                        // demand.get_global_index(demand.mtime[k]),
+                        global::g_demand.get_global_index(global::g_demand.mtime[idx_global_demand[k]]),
                         k,
-                        demand.mtime[k],
+                        // demand.mtime[k],
+                        global::g_demand.mtime[idx_global_demand[k]],
                         max_server_support_flow,
                         server_id});
                 }

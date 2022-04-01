@@ -17,9 +17,17 @@ namespace solve
         std::vector<MAX_5_PERCENT_FLOW> m_max_5_percent_flow_vec; //边缘节点对应的能存储的最大的5%流量
         std::vector<std::vector<SERVER_SUPPORTED_FLOW>> m_server_supported_flow_2_time_vec;
         DEMAND m_demand;
-        std::vector<ANSWER>& m_X_results;//严禁被free/delete
+        std::vector<int> m_idx_global_demand; //全局demand的ID索引
+        std::vector<ANSWER> &m_X_results;     //严禁被free/delete
 
-        _CommonDataForResultGenrator(const DEMAND& demand, std::vector<ANSWER>& X_results) : m_demand(demand), m_X_results(X_results) {}
+        _CommonDataForResultGenrator(const DEMAND &demand,
+                                     std::vector<ANSWER> &X_results,
+                                     std::vector<int>&& idx_global_demand) : m_demand(demand),
+                                                                                 m_X_results(X_results),
+                                                                                 m_idx_global_demand(idx_global_demand)
+        {
+        }
+        _CommonDataForResultGenrator() = delete;
 
     } CommonDataForResultGenrator;
 
