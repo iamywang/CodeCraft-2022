@@ -61,6 +61,7 @@ public:
             const auto &X = X_results[time];
             const auto &stream_client = X.stream2server_id;
             std::vector<int> server_sum_flow;
+            server_sum_flow.resize(g_qos.site_name.size(), 0);
 
             for (int stream_id = 0; stream_id < stream_client.size(); stream_id++)
             {
