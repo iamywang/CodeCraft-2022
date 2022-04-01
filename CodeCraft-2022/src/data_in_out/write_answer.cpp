@@ -34,7 +34,7 @@ void write_result(const std::vector<ANSWER> &X_results)
 			sprintf(p_buf, "%s:", g_qos.client_name[client_id].c_str());
 			p_buf += strlen(p_buf);
 
-			std::vector<std::string> &stream_names = g_demand.demand[time].id_local_stream_2_stream_name;
+			std::vector<std::string> &stream_names = g_demand.stream_client_demand[time].id_local_stream_2_stream_name;
 			for (int stream_id = 0; stream_id < stream_names.size(); stream_id++)
 			{
 				int server_id = X.stream2server_id[stream_id][client_id];

@@ -32,25 +32,8 @@ bool task(const int left,
           std::vector<ANSWER> &X_results)
 {
     DEMAND demand;
-    demand.clear();
-    for (int i = left; i <= right; i++)
-    {
-        demand.demand.push_back(global::g_demand.demand[i]);
-        demand.mtime.push_back(global::g_demand.mtime[i]);
-    }
+    DEMAND::slice(demand, left, right);
 
-    /*
-        if (optimize::solve(num_iteration, is_generated_initial_results, X_results) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-        //*/
-
-    //*
     solve::Solver solver(X_results, demand);
     if (solver.solve(num_iteration, is_generated_initial_results) == 0)
     {
@@ -91,25 +74,16 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
         demand.clear();
         for (auto &X : X_results)
         {
-            demand.demand.push_back(global::g_demand.demand[X.idx_global_mtime]);
+            demand.client_demand.push_back(global::g_demand.client_demand[X.idx_global_mtime]);
+            demand.stream_client_demand.push_back(global::g_demand.stream_client_demand[X.idx_global_mtime]);
             demand.mtime.push_back(global::g_demand.mtime[X.idx_global_mtime]);
         }
         for (auto &X : X_results_right)
         {
-            demand.demand.push_back(global::g_demand.demand[X.idx_global_mtime]);
+            demand.client_demand.push_back(global::g_demand.client_demand[X.idx_global_mtime]);
+            demand.stream_client_demand.push_back(global::g_demand.stream_client_demand[X.idx_global_mtime]);
             demand.mtime.push_back(global::g_demand.mtime[X.idx_global_mtime]);
             X_results.push_back(X);
-        }
-
-        {
-            // if (optimize::solve(NUM_ITERATION, false, X_results) == 0)
-            // {
-            //     return true;
-            // }
-            // else
-            // {
-            //     return false;
-            // }
         }
 
         {
@@ -140,9 +114,10 @@ int main()
     g_start_time = MyUtils::Tools::getCurrentMillisecs();
 
     read_configure(g_qos_constraint, g_minimum_cost);
-    read_demand(global::g_demand);
     read_site_bandwidth(g_site_bandwidth);
+    read_demand(global::g_demand);//要求最后读demand
     read_qos(g_qos);
+
 
     {
         cout << "时刻数量: " << global::g_demand.mtime.size() << endl;
@@ -213,14 +188,17 @@ int main()
     //*/
 #else
     {
-        divide_conquer(0, global::g_demand.demand.size() - 1, X_results);
+        // divide_conquer(0, global::g_demand.client_demand.size() - 1, X_results);
+        task(0, global::g_demand.client_demand.size() - 1, 10000, true, X_results);
     }
 #endif
     // test_solver(X_results);
 
+
     if (Verifier(global::g_demand).verify(X_results))
     {
-        write_result(X_results);
+        std::cout << "Verify OK!" << std::endl;
+        // write_result(X_results);
     }
     else
     {
