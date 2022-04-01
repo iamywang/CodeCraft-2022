@@ -22,11 +22,12 @@ typedef struct _SITE_BANDWIDTH
     std::vector<std::string> site_name;
     std::vector<int> bandwidth;
 
-    struct _inner_data{
+    struct _inner_data
+    {
         int id_server;
         int bandwidth;
     };
-    std::vector<_inner_data> bandwidth_sorted_by_bandwidth_ascending_order;//根据banddwidth从大到小排序
+    std::vector<_inner_data> bandwidth_sorted_by_bandwidth_ascending_order; //根据banddwidth从大到小排序
 
 } SITE_BANDWIDTH;
 extern SITE_BANDWIDTH g_site_bandwidth;
@@ -43,8 +44,8 @@ typedef struct _DEMAND
     static struct _DEMAND s_demand; //记录全局的demand
     std::vector<std::string> client_name;
     std::vector<std::string> mtime;
-    // std::vector<std::vector<int>> demand;
-    std::vector<STREAM_CLIENT_DEMAND> demand;
+    std::vector<std::vector<int>> client_demand; //每个客户端的总需求
+    std::vector<STREAM_CLIENT_DEMAND> stream_client_demand;
 
 private:
     std::map<std::string, int> mtime_2_id;
@@ -75,11 +76,30 @@ public:
         return ret;
     }
 
+    /**
+     * @brief 获取[left, right]
+     *
+     * @param [out] dem
+     * @param [in] left
+     * @param [in] right
+     */
+    static void slice(_DEMAND &dem, int left, int right)
+    {
+        dem.clear();
+        for (int i = left; i <= right; i++)
+        {
+            dem.stream_client_demand.push_back(s_demand.stream_client_demand[i]);
+            dem.mtime.push_back(s_demand.mtime[i]);
+            dem.client_demand.push_back(s_demand.client_demand[i]);
+        }
+    }
+
     void clear()
     {
         mtime_2_id.clear();
         mtime.clear();
-        demand.clear();
+        stream_client_demand.clear();
+        client_demand.clear();
     }
 
 } DEMAND;
@@ -103,11 +123,12 @@ typedef struct _ANSWER
     int idx_global_mtime;                           //该解在当前时刻在global::g_demand中对应的时刻的index
     int idx_local_mtime;                            //该解在当前时刻在局部demand中对应的时刻的index
     std::string mtime;                              //时刻某个时刻的分配方案 // TODO 我觉得这里可以删去该变量
+    std::vector<std::vector<int>> flow;             //行是客户，列是边缘节点
     std::vector<std::vector<int>> stream2server_id; //行是stream,列是client，值是server_id。由于相应的stream对client的需求可以为0，因此对应的值会是-1
     std::vector<int> sum_flow_site;                 //各个服务器的实际总流量
     std::vector<double> cost;                       //各个服务器的成本
 
-    _ANSWER() {};
+    _ANSWER(){};
     ~_ANSWER() {}
     void init(const int num_stream)
     {
@@ -124,7 +145,7 @@ typedef struct _ANSWER
      */
     void set(const int id_stream, const int id_client, const int id_server)
     {
-        const int demand_tmp = global::g_demand.demand[idx_global_mtime].stream_2_client_demand[id_stream][id_client];
+        const int demand_tmp = global::g_demand.stream_client_demand[idx_global_mtime].stream_2_client_demand[id_stream][id_client];
         if (stream2server_id[id_stream][id_client] != -1) //如果已经指定了服务器
         {
             int id = stream2server_id[id_stream][id_client];

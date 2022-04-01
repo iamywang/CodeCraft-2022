@@ -30,8 +30,8 @@ namespace solve
         Solver(std::vector<ANSWER> &X_results,
                const DEMAND &demand) : m_common_data(demand, X_results)
         {
-            m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm(m_common_data);
-            // m_result_generator = (ResultGenerator *)new XSolverMaxFlow(m_common_data);
+            // m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm(m_common_data);
+            m_result_generator = (ResultGenerator *)new XSolverMaxFlow(m_common_data);
         }
         ~Solver() { delete m_result_generator; }
 

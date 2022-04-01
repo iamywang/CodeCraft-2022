@@ -24,13 +24,12 @@ namespace solve
         sort_by_demand_and_qos(DEMAND &demand,
                                vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_time_vec)
         {
-            /*
             server_supported_flow_2_time_vec.clear();
-            for (int k = 0; k < demand.demand.size(); k++)
+            for (int k = 0; k < demand.client_demand.size(); k++)
             {
                 vector<SERVER_SUPPORTED_FLOW> server_supported_flow;
 
-                const auto &line_demand = demand.demand[k];
+                const auto &line_demand = demand.client_demand[k];
 
                 for (int server_id = 0; server_id < g_qos.site_name.size(); server_id++) //遍历边缘节点
                 {
@@ -69,7 +68,7 @@ namespace solve
                       {
                           return a[0].max_flow > b[0].max_flow;
                       });
-//*/
+
             return;
         }
     };
