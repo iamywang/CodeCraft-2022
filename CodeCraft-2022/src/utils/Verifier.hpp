@@ -39,16 +39,17 @@ private:
         double sum = 0;
         for (int i = 0; i < real_site_flow.size(); i++)
         {
-            if (sum > 0 && sum <= g_minimum_cost)
-            {
-                sum += g_minimum_cost;
-            }
-            else if (sum > g_minimum_cost)
-            {
-                const int flow = real_site_flow[i][quantile_idx];
-                const int bandwidth = g_site_bandwidth.bandwidth[i];
-                sum += pow(double(flow - g_minimum_cost), 2) / bandwidth + flow;
-            }
+            const int flow = real_site_flow[i][quantile_idx];
+            // if (flow > 0 && flow <= g_minimum_cost)
+            // {
+            //     sum += g_minimum_cost;
+            // }
+            // else if (flow > g_minimum_cost)
+            // {
+            //     const int bandwidth = g_site_bandwidth.bandwidth[i];
+            //     sum += pow(double(flow - g_minimum_cost), 2) / bandwidth + flow;
+            // }
+            sum +=  X_results[0].calculate_cost(i, flow);
         }
         return sum;
     }
@@ -114,7 +115,7 @@ public:
 
         {
             //下面计算成本
-            int price = calculate_price(X_results);
+            int price = round(calculate_price(X_results));
             printf("verify:total price is %d\n", price);
         }
         return true;
