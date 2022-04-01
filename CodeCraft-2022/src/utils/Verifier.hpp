@@ -11,9 +11,11 @@ class VerifierNew
 {
 private:
     DEMAND &m_demand;
+    int m_95_quantile_idx;
 
 public:
-    VerifierNew(DEMAND &demand) : m_demand(demand) {}
+    VerifierNew(DEMAND &demand, int in_95_quantile_idx) : m_demand(demand), m_95_quantile_idx(in_95_quantile_idx) {}
+
     ~VerifierNew() {}
 
 private:
@@ -35,7 +37,7 @@ private:
             std::sort(v.begin(), v.end());
         }
 
-        int quantile_idx = calculate_quantile_index(0.95, this->m_demand.mtime.size());
+        int quantile_idx = m_95_quantile_idx;
         double sum = 0;
         for (int i = 0; i < real_site_flow.size(); i++)
         {
@@ -131,16 +133,30 @@ public:
 class Verifier
 {
 private:
-    DEMAND &m_demand;
+    // DEMAND m_demand;
+    int m_95_quantile_idx;
+    int m_current_mtime_count; //当前要校验的时刻数量
 
 public:
-    Verifier(DEMAND &demand) : m_demand(demand) {}
+
+    // Verifier(DEMAND &demand, int in_95_quantile_idx) : m_demand(demand), m_95_quantile_idx(in_95_quantile_idx) {}
+
+    /**
+     * @brief Construct a new Verifier object
+     *
+     * @param [in] current_mtime_count 当前要校验的时刻的数量
+     */
+    Verifier(int current_mtime_count) : m_current_mtime_count(current_mtime_count),
+                                        m_95_quantile_idx(calculate_quantile_index(0.95, current_mtime_count))
+    {
+    }
+
     ~Verifier() {}
 
 private:
     int calculate_price(const vector<ANSWER> &X_results)
     {
-        vector<vector<int>> real_site_flow(g_qos.site_name.size(), vector<int>(this->m_demand.mtime.size(), 0));
+        vector<vector<int>> real_site_flow(g_qos.site_name.size(), vector<int>(m_current_mtime_count, 0));
         for (int t = 0; t < X_results.size(); t++)
         {
             const auto &X = X_results[t];
@@ -156,11 +172,10 @@ private:
             std::sort(v.begin(), v.end());
         }
 
-        int quantile_idx = calculate_quantile_index(0.95, this->m_demand.mtime.size());
         int sum = 0;
         for (int i = 0; i < real_site_flow.size(); i++)
         {
-            sum += real_site_flow[i][quantile_idx];
+            sum += real_site_flow[i][m_95_quantile_idx];
         }
         return sum;
     }
@@ -201,9 +216,11 @@ public:
                 }
 
                 int sum = std::accumulate(flow[client_id].begin(), flow[client_id].end(), 0); //客户的流量总和
-                if (sum != this->m_demand.client_demand[X.idx_local_mtime][client_id])
+                // if (sum != this->m_demand.client_demand[X.idx_local_mtime][client_id])
+                if (sum != global::g_demand.client_demand[X.idx_global_mtime][client_id])
                 {
-                    cout << X.mtime << " " << client_id << " " << sum << " " << this->m_demand.client_demand[X.idx_local_mtime][client_id] << endl;
+                    // cout << X.mtime << " " << client_id << " " << sum << " " << this->m_demand.client_demand[X.idx_local_mtime][client_id] << endl;
+                    cout << X.mtime << " " << client_id << " " << sum << " " << global::g_demand.client_demand[X.idx_global_mtime][client_id] << endl;
                     cout << "sum is not equal demand" << endl;
                     return false;
                 }

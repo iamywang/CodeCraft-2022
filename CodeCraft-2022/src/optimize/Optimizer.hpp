@@ -19,21 +19,26 @@ namespace optimize
     class Optimizer
     {
     private:
-        const DEMAND &m_demand;
+        // const DEMAND &m_demand;
+        const std::vector<int> &m_idx_global_demand;
         vector<ANSWER> &m_X_results;
 
         vector<vector<SERVER_FLOW>> m_flows_vec_poll; //各行是对应的边缘节点在各个时刻的总的分配流量，保证各行是按照时间排序的
         vector<vector<SERVER_FLOW *>> flows_vec;      //各行是对应的边缘节点在各个时刻的总的分配流量，没法保证各行是按照时间排序的
 
     public:
-        Optimizer(const DEMAND &demand,
-                  vector<ANSWER> &X_results_) : m_demand(demand),
+        Optimizer(
+            // const DEMAND &demand,
+                  const std::vector<int> &idx_global_demand,
+                  vector<ANSWER> &X_results_) : 
+                //   m_demand(demand),
+                                                m_idx_global_demand(idx_global_demand),
                                                 m_X_results(X_results_)
         {
             for (int i = 0; i < g_site_bandwidth.site_name.size(); i++)
             {
-                m_flows_vec_poll.push_back(vector<SERVER_FLOW>(this->m_demand.mtime.size()));
-                flows_vec.push_back(vector<SERVER_FLOW *>(this->m_demand.mtime.size()));
+                m_flows_vec_poll.push_back(vector<SERVER_FLOW>(this->m_idx_global_demand.size()));
+                flows_vec.push_back(vector<SERVER_FLOW *>(this->m_idx_global_demand.size()));
 
                 for (int j = 0; j < m_flows_vec_poll[i].size(); j++)
                 {
@@ -82,13 +87,15 @@ namespace optimize
                       const int num_iteration)
         {
 
-            const int max_95_percent_index = calculate_quantile_index(0.95, this->m_demand.mtime.size());
+            const int max_95_percent_index = calculate_quantile_index(0.95, this->m_idx_global_demand.size());
 
-            Dispather dispahter(this->m_demand,
-                                m_flows_vec_poll,
-                                flows_vec,
-                                server_supported_flow_2_site_id_vec,
-                                m_X_results);
+            Dispather dispahter(
+                // this->m_demand,
+                this->m_idx_global_demand,
+                m_flows_vec_poll,
+                flows_vec,
+                server_supported_flow_2_site_id_vec,
+                m_X_results);
 
             int jiange = 50;
             if (m_X_results.size() > 2000)
@@ -122,7 +129,7 @@ namespace optimize
                     //更新一遍后5%的分位流量
                     for (int i = 96; i <= 100; i++)
                     {
-                        int quantile_index = calculate_quantile_index(double(i) / 100.0, this->m_demand.mtime.size());
+                        int quantile_index = calculate_quantile_index(double(i) / 100.0, this->m_idx_global_demand.size());
                         if (quantile_index == last_quantile_index)
                         {
                             continue;
@@ -155,10 +162,10 @@ namespace optimize
 #ifdef TEST
                 vector<int> flows_vec_95_according_site_id(g_qos.client_name.size(), 0);
                 {
-                    int idx = calculate_quantile_index(0.95, this->m_demand.mtime.size());
+                    int idx = calculate_quantile_index(0.95, this->m_idx_global_demand.size());
 
-                    vector<SERVER_FLOW*> flows_vec_quantile2;
-                    get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_demand.mtime.size()),
+                    vector<SERVER_FLOW *> flows_vec_quantile2;
+                    get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_idx_global_demand.size()),
                                                     flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
                 }
                 int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);

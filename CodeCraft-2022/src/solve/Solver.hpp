@@ -28,8 +28,10 @@ namespace solve
 
     public:
         Solver(std::vector<ANSWER> &X_results,
-               const DEMAND &demand,
-               std::vector<int>&& idx_global_demand) : m_common_data(demand, X_results, std::move(idx_global_demand))
+               //    const DEMAND &demand,
+               std::vector<int> &&idx_global_demand) : m_common_data(
+                                                           //    demand,
+                                                           X_results, std::move(idx_global_demand))
         {
             m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm(m_common_data);
             // m_result_generator = (ResultGenerator *)new XSolverMaxFlow(m_common_data);
@@ -41,20 +43,19 @@ namespace solve
             auto &server_supported_flow_2_time_vec =
                 m_common_data.m_server_supported_flow_2_time_vec;
             auto &X_results = m_common_data.m_X_results;
-            auto &demand = m_common_data.m_demand;
+            // auto &demand = m_common_data.m_demand;
 
             // solve::Utils::sort_by_demand_and_qos(demand, m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
             solve::Utils::sort_by_demand_and_qos(m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
-
 
             if (is_generate_initial_results)
             {
                 m_result_generator->generate_initial_X_results();
             }
-            for (auto &X : X_results)
-            {
-                X.idx_local_mtime = demand.get(X.mtime);
-            }
+            // for (auto &X : X_results)
+            // {
+            //     X.idx_local_mtime = demand.get(X.mtime);
+            // }
 
             //根据时间对X_results进行排序
             std::sort(X_results.begin(), X_results.end(), [this](const ANSWER &a, const ANSWER &b)
@@ -71,9 +72,18 @@ namespace solve
                           { return a.server_index < b.server_index; });
             }
 
-            optimize::Optimizer(demand, X_results).optimize(server_supported_flow_2_time_vec, num_iteration);
+            optimize::Optimizer(
+                // demand,
+                m_common_data.m_idx_global_demand,
+                X_results)
+                .optimize(server_supported_flow_2_time_vec, num_iteration);
+
 #ifdef TEST
-            if (Verifier(demand).verify(X_results))
+            // if (Verifier(demand,
+            //              calculate_quantile_index(0.95,
+            //                                       m_common_data.m_idx_global_demand.size()))
+            if (Verifier(m_common_data.m_idx_global_demand.size())
+                    .verify(X_results))
             {
                 cout << "verify success" << endl;
             }

@@ -19,7 +19,8 @@ namespace optimize
     class Dispather
     {
     private:
-        const DEMAND &m_demand;
+        // const DEMAND &m_demand;
+        const std::vector<int> &m_idx_global_demand;
 
         vector<vector<SERVER_FLOW>> &m_flows_vec_poll; //各行是对应的边缘节点在各个时刻的总的分配流量，保证各行是按照时间排序的
         vector<vector<SERVER_FLOW *>> &m_flows_vec;    //各行是对应的边缘节点在各个时刻的总的分配流量，但是并不保证每一行都是按照时间排序的
@@ -28,11 +29,15 @@ namespace optimize
         vector<ANSWER> &m_X_results;
 
     public:
-        Dispather(const DEMAND &demand,
+        Dispather(
+                //   const DEMAND &demand,
+                  const std::vector<int> &idx_global_demand,
                   vector<vector<SERVER_FLOW>> &flows_vec_poll_,
                   vector<vector<SERVER_FLOW *>> &flows_vec_,
                   const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_site_id_vec_,
-                  vector<ANSWER> &X_results_) : m_demand(demand),
+                  vector<ANSWER> &X_results_) : 
+                                                // m_demand(demand),
+                                                m_idx_global_demand(idx_global_demand),
                                                 m_flows_vec_poll(flows_vec_poll_),
                                                 m_flows_vec(flows_vec_),
                                                 m_server_supported_flow_2_site_id_vec(server_supported_flow_2_site_id_vec_),
@@ -140,7 +145,7 @@ namespace optimize
 
             vector<int> flows_vec_95_according_site_id(flows_vec_quantile_according_site_id.size(), 0);
             {
-                int idx = calculate_quantile_index(0.95, this->m_demand.mtime.size());
+                int idx = calculate_quantile_index(0.95, this->m_idx_global_demand.size());
                 if (idx == quantile)
                 {
                     flows_vec_95_according_site_id = flows_vec_quantile_according_site_id;
@@ -148,7 +153,7 @@ namespace optimize
                 else
                 {
                     vector<SERVER_FLOW *> flows_vec_quantile2;
-                    get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_demand.mtime.size()),
+                    get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_idx_global_demand.size()),
                                                     m_flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
                 }
             }
@@ -163,7 +168,7 @@ namespace optimize
 
             {
                 vector<SERVER_FLOW> tmp;
-                get_server_flow_vec_by_quantile(calculate_quantile_index(0.8, this->m_demand.mtime.size()),
+                get_server_flow_vec_by_quantile(calculate_quantile_index(0.8, this->m_idx_global_demand.size()),
                                                 m_flows_vec,
                                                 tmp,
                                                 flows_vec_low_limit_according_site_id);
