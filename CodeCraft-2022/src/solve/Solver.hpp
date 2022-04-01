@@ -30,8 +30,8 @@ namespace solve
         Solver(std::vector<ANSWER> &X_results,
                const DEMAND &demand) : m_common_data(demand, X_results)
         {
-            // m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm(m_common_data);
-            m_result_generator = (ResultGenerator *)new XSolverMaxFlow(m_common_data);
+            m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm(m_common_data);
+            // m_result_generator = (ResultGenerator *)new XSolverMaxFlow(m_common_data);
         }
         ~Solver() { delete m_result_generator; }
 
@@ -48,7 +48,6 @@ namespace solve
             {
                 m_result_generator->generate_initial_X_results();
             }
-/*
             for (auto &X : X_results)
             {
                 X.idx_local_mtime = demand.get(X.mtime);
@@ -82,7 +81,6 @@ namespace solve
                 return -1;
             }
 #endif
-//*/
             return 0;
         }
     };

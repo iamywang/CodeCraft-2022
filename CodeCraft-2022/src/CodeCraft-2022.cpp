@@ -8,7 +8,7 @@
 #include "utils/Verifier.hpp"
 #include "utils/Thread/ThreadPoll.hpp"
 
-// #define MULTI_THREAD
+#define MULTI_THREAD
 
 extern void write_result(const std::vector<ANSWER> &X_results);
 
@@ -69,7 +69,6 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
             return false;
 
         //合并
-        // optimize::g_demand.clear();
         DEMAND demand;
         demand.clear();
         for (auto &X : X_results)
@@ -133,13 +132,13 @@ int main()
     {
         vector<ANSWER> X_results_tmp[NUM_THREAD];
         vector<std::future<bool>> rets_vec;
-        const int step = (int)global::g_demand.demand.size() / NUM_THREAD + 1;
+        const int step = (int)global::g_demand.client_demand.size() / NUM_THREAD + 1;
         for (int i = 0; i < NUM_THREAD; i++)
         {
             int left = i * step;
             int right = (i + 1) * step - 1;
-            if (right >= global::g_demand.demand.size())
-                right = global::g_demand.demand.size() - 1;
+            if (right >= global::g_demand.client_demand.size())
+                right = global::g_demand.client_demand.size() - 1;
             rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
                                                     { return divide_conquer(left, right, X_results_tmp[i]); }));
         }
@@ -183,13 +182,13 @@ int main()
         {
             X_results.insert(X_results.end(), X_results_vec_for_last_merge[i]->begin(), X_results_vec_for_last_merge[i]->end());
         }
-        task(0, global::g_demand.demand.size() - 1, 10000, false, X_results);
+        task(0, global::g_demand.client_demand.size() - 1, 10000, false, X_results);
     }
     //*/
 #else
     {
-        // divide_conquer(0, global::g_demand.client_demand.size() - 1, X_results);
-        task(0, global::g_demand.client_demand.size() - 1, 10000, true, X_results);
+        divide_conquer(0, global::g_demand.client_demand.size() - 1, X_results);
+        // task(0, global::g_demand.client_demand.size() - 1, 10000, true, X_results);
     }
 #endif
     // test_solver(X_results);

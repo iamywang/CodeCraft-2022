@@ -257,12 +257,12 @@ namespace solve
 
             {
                 //verify
-                int sum_dem = std::accumulate(demand.begin(), demand.end(), 0);
-                if(sum_dem != max_flow)
-                {
-                    cout << "sum_dem != max_flow, error" << endl;
-                    exit(-1);
-                }
+                // int sum_dem = std::accumulate(demand.begin(), demand.end(), 0);
+                // if(sum_dem != max_flow)
+                // {
+                //     cout << "sum_dem != max_flow, error" << endl;
+                //     exit(-1);
+                // }
             }
             return;
         }
