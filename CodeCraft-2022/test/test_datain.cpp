@@ -3,6 +3,7 @@
 #include "global.hpp"
 #include "data_in_out/DataIn.hpp"
 #include "data_in_out/write_answer.cpp"
+#include "utils/Verifier.hpp"
 
 using namespace std;
 
@@ -46,6 +47,7 @@ int main()
     for (int i = 0; i < X_results.size(); i++)
     {
         X_results[i].stream2server_id.resize(global::g_demand.demand[i].id_local_stream_2_stream_name.size());
+        X_results[i].mtime = global::g_demand.mtime[i];
         for (int j = 0; j < X_results[i].stream2server_id.size(); j++)
         {
             X_results[i].stream2server_id[j].resize(global::g_demand.client_name.size());
@@ -58,6 +60,8 @@ int main()
             }
         }
     }
+
+    Verifier(global::g_demand).verify(X_results);
 
     write_result(X_results);
 
