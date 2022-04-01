@@ -24,13 +24,13 @@ void write_result(const std::vector<ANSWER> &X_results)
 	for (int time = 0; time < X_results.size(); time++)
 	{
 		auto &X = X_results[time];
-		char buf[40960];
-		std::vector<std::string> tmp_server;
-		tmp_server.resize(g_qos.site_name.size());
 
 		for (int client_id = 0; client_id < g_qos.client_name.size(); client_id++)
 		{
+			char buf[409600];
 			char *p_buf = buf;
+			std::vector<std::string> tmp_server;
+			tmp_server.resize(g_qos.site_name.size());
 			sprintf(p_buf, "%s:", g_qos.client_name[client_id].c_str());
 			p_buf += strlen(p_buf);
 
@@ -48,7 +48,7 @@ void write_result(const std::vector<ANSWER> &X_results)
 				}
 			}
 			bool flag = false;
-			for(int server_id = 0; server_id < tmp_server.size(); server_id++)
+			for (int server_id = 0; server_id < tmp_server.size(); server_id++)
 			{
 				if (tmp_server[server_id] != "")
 				{
