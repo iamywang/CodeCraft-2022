@@ -49,7 +49,7 @@ private:
             //     const int bandwidth = g_site_bandwidth.bandwidth[i];
             //     sum += pow(double(flow - g_minimum_cost), 2) / bandwidth + flow;
             // }
-            sum +=  X_results[0].calculate_cost(i, flow);
+            sum += X_results[0].calculate_cost(i, flow);
         }
         return sum;
     }
@@ -81,7 +81,10 @@ public:
                         if (isAlloc == false)
                         {
                             printf("%s: ", X.mtime.c_str());
-                            printf("X.stream2server_id[%d][%d] = %d, but real demand = 0\n", stream_id, client_id, server_id);
+                            printf("client[%d]: %s, stream[%d]: %s is allocated to server[%d]: %s, but real demand is: 0\n",
+                            client_id, global::g_demand.client_name[client_id].c_str(),
+                            stream_id, global::g_demand.demand[time].id_local_stream_2_stream_name[stream_id].c_str(),
+                            server_id, g_qos.site_name);
                             return false;
                         }
                         server_sum_flow[server_id] += stream_client_demand;
@@ -89,7 +92,10 @@ public:
                     else if (isAlloc == true && server_id == -1)
                     {
                         printf("%s: ", X.mtime.c_str());
-                        printf("X.stream2server_id[%d][%d] is not satisfied (demand is %d)\n", stream_id, client_id, stream_client_demand);
+                        printf("client[%d]: %s, stream[%d]: %s is not allocated to any server, but real demand is: %d\n",
+                        client_id, global::g_demand.client_name[client_id].c_str(),
+                        stream_id, global::g_demand.demand[time].id_local_stream_2_stream_name[stream_id].c_str(),
+                        stream_client_demand);
                         return false;
                     }
                 }

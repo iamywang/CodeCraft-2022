@@ -32,7 +32,6 @@ void read_configure(int &qos_constraint, int &minimum_cost)
     }
     else
     {
-        int qos_constraint(0);
         std::string file_content;
         MyUtils::Tools::readAll(base_path + file_names[0], file_content);
         auto lines = MyUtils::Tools::split(file_content, "\r\n");
