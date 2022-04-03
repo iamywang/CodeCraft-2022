@@ -7,6 +7,7 @@
 #include "solve/Solver.hpp"
 #include "utils/Verifier.hpp"
 #include "utils/Thread/ThreadPoll.hpp"
+#include "generate/generate.hpp"
 
 #define MULTI_THREAD
 
@@ -203,12 +204,13 @@ int main()
     }
 #endif
     // test_solver(X_results);
+    generate::allocate_flow_to_stream(X_results);
 
     // if (Verifier(global::g_demand, calculate_quantile_index(0.95, global::g_demand.client_demand.size())).verify(X_results))
     if (Verifier(global::g_demand.client_demand.size()).verify(X_results))
     {
         std::cout << "Verify OK!" << std::endl;
-        // write_result(X_results);
+        write_result(X_results);
     }
     else
     {
