@@ -51,16 +51,10 @@ namespace generate
 
                         // 分配flow，要考虑g_minimum_cost
                         int flow = answer.flow[client_id][site_id];
-                        // if (flow > 0)
-                        // {
-                        //     if (flow < g_minimum_cost)
-                        //         flow = g_minimum_cost;
-                        // }
-                        // else
-                        // {
-                        //     if (answer.sum_flow_site[site_id] > 0)
-                        //         flow = g_minimum_cost;
-                        // }
+                        if (g_site_bandwidth.bandwidth[site_id] - left_bandwidth[site_id] + flow < g_minimum_cost)
+                        {
+                            flow = g_minimum_cost - g_site_bandwidth.bandwidth[site_id] + left_bandwidth[site_id];
+                        }
 
                         // qos满足，可以分配
                         if (stream_client_demand <= flow)
@@ -81,10 +75,17 @@ namespace generate
                     }
 
                     // 按照left_bandwidth分配给边缘节点，找到一个最匹配的
+                    int most_match_zero_site_id = -1;
+                    double match_zero_percent = 0;
+
                     if (most_match_site_id == -1)
                     {
                         most_match_site_id = -1;
                         match_percent = 0;
+
+                        most_match_zero_site_id = -1;
+                        match_zero_percent = 100;
+
                         for (int site_id = 0; site_id < g_num_server; site_id++)
                         {
                             if (g_qos.qos[site_id][client_id] == 0)
@@ -96,10 +97,24 @@ namespace generate
                             const int left = left_bandwidth[site_id];
                             if (stream_client_demand <= left)
                             {
+                                // 首选匹配成本不为0，百分比最大匹配
                                 if (double(stream_client_demand) / double(left) > match_percent)
                                 {
-                                    match_percent = double(stream_client_demand) / double(left);
-                                    most_match_site_id = site_id;
+                                    if (g_site_bandwidth.bandwidth[site_id] != left_bandwidth[site_id])
+                                    {
+                                        match_percent = double(stream_client_demand) / double(left);
+                                        most_match_site_id = site_id;
+                                    }
+                                }
+
+                                // 最后匹配成本为0的边缘节点，百分比最小匹配
+                                if (double(stream_client_demand) / double(left) < match_zero_percent)
+                                {
+                                    if (g_site_bandwidth.bandwidth[site_id] == left_bandwidth[site_id])
+                                    {
+                                        match_zero_percent = double(stream_client_demand) / double(left);
+                                        most_match_zero_site_id = site_id;
+                                    }
                                 }
                             }
                         }
@@ -107,11 +122,18 @@ namespace generate
                         if (most_match_site_id != -1)
                         {
                             answer.set(stream_id, client_id, most_match_site_id);
+                            answer.flow[client_id][most_match_site_id] -= min(stream_client_demand, answer.flow[client_id][most_match_site_id]);
                             left_bandwidth[most_match_site_id] -= stream_client_demand;
+                        }
+                        else if (most_match_zero_site_id != -1)
+                        {
+                            answer.set(stream_id, client_id, most_match_zero_site_id);
+                            answer.flow[client_id][most_match_site_id] -= min(stream_client_demand, answer.flow[client_id][most_match_site_id]);
+                            left_bandwidth[most_match_zero_site_id] -= stream_client_demand;
                         }
                     }
 
-                    if (most_match_site_id == -1)
+                    if (most_match_site_id == -1 && most_match_zero_site_id == -1)
                     {
                         cout << "no match site" << endl;
                     }
