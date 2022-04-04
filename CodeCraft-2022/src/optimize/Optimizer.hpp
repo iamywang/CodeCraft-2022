@@ -35,47 +35,21 @@ namespace optimize
                                                 m_idx_global_demand(idx_global_demand),
                                                 m_X_results(X_results_)
         {
-            for (int i = 0; i < g_site_bandwidth.site_name.size(); i++)
-            {
-                m_flows_vec_poll.push_back(vector<SERVER_FLOW>(this->m_idx_global_demand.size()));
-                flows_vec.push_back(vector<SERVER_FLOW *>(this->m_idx_global_demand.size()));
+            m_flows_vec_poll.resize(g_site_bandwidth.site_name.size(), vector<SERVER_FLOW>(this->m_idx_global_demand.size()));
+            flows_vec.resize(g_site_bandwidth.site_name.size(), vector<SERVER_FLOW *>(this->m_idx_global_demand.size()));
 
-                for (int j = 0; j < m_flows_vec_poll[i].size(); j++)
-                {
-                    flows_vec[i][j] = &m_flows_vec_poll[i][j];
-                }
-            }
-
-            for (int id_ans = 0; id_ans < m_X_results.size(); id_ans++) // TODO 总觉得在解初始化阶段更新一次即可，但是实际测试发现反而变慢了
+            for (int id_ans = 0; id_ans < m_X_results.size(); id_ans++)
             {
                 auto &X = m_X_results[id_ans];
-                X.sum_flow_site.resize(0);
                 for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
                 {
-                    int sum_flow = MyUtils::Tools::sum_column(X.flow, site_id);
-                    X.sum_flow_site.push_back(sum_flow);
                     m_flows_vec_poll[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, X.sum_flow_site[site_id]};
+                    flows_vec[site_id][id_ans] = &m_flows_vec_poll[site_id][id_ans];
                 }
             }
         }
         ~Optimizer() {}
 
-    private:
-        void update_flows_vec()
-        {
-            /*
-            for (int id_ans = 0; id_ans < m_X_results.size(); id_ans++)
-            {
-                const auto &X = m_X_results[id_ans];
-                for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-                {
-                    // flows_vec[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, X.sum_flow_site[site_id]}; //因为是按照所有时刻计算的，所以即使为0也要计算在内
-                    // *flows_ptr_vec[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, X.sum_flow_site[site_id]};
-                    m_flows_vec_poll[site_id][id_ans].flow = X.sum_flow_site[site_id];
-                }
-            }
-            //*/
-        }
 
     public:
         /**
@@ -108,15 +82,6 @@ namespace optimize
                 {
                     break;
                 }
-                // for (int id_ans = 0; id_ans < m_X_results.size(); id_ans++)
-                // {
-                //     const auto &X = m_X_results[id_ans];
-                //     for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-                //     {
-                //         flows_vec[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, X.sum_flow_site[site_id]}; //因为是按照所有时刻计算的，所以即使为0也要计算在内
-                //     }
-                // }
-                update_flows_vec();
 
                 if (dispahter.dispath(max_95_percent_index))
                 {
@@ -137,18 +102,6 @@ namespace optimize
                         last_quantile_index = quantile_index;
                         bool flag_tmp = dispahter.dispath2(quantile_index);
                         flag = flag || flag_tmp;
-                        if (flag_tmp)
-                        {
-                            // for (int id_ans = 0; id_ans < m_X_results.size(); id_ans++)
-                            // {
-                            //     const auto &X = m_X_results[id_ans];
-                            //     for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-                            //     {
-                            //         flows_vec[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, X.sum_flow_site[site_id]}; //因为是按照所有时刻计算的，所以即使为0也要计算在内
-                            //     }
-                            // }
-                            update_flows_vec();
-                        }
                     }
                     if (flag)
                         continue;
