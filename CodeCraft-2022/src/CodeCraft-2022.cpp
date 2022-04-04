@@ -155,7 +155,7 @@ int main()
             for (int i = 0; i < NUM_THREAD - 1; i += 2)
             {
                 // X_results_tmp[i].insert(X_results_tmp[i].end(), X_results_tmp[i + 1].begin(), X_results_tmp[i + 1].end());
-                for(auto &X : X_results_tmp[i+1])
+                for (auto &X : X_results_tmp[i + 1])
                 {
                     X_results_tmp[i].push_back(std::move(X));
                 }
@@ -163,7 +163,11 @@ int main()
                 X_results_vec_for_last_merge.push_back(&X_results_tmp[i]);
 
                 rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
-                                                        { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 100, false, X_results_tmp[i]); }));
+                                                        { return task(idx_begin,
+                                                                      idx_begin + X_results_tmp[i].size() - 1,
+                                                                      100,
+                                                                      false,
+                                                                      X_results_tmp[i]); }));
                 idx_begin += X_results_tmp[i].size();
             }
             for (auto &ret : rets_vec)
