@@ -198,10 +198,11 @@ int main()
 
     {
         Verifier ver(global::g_demand.client_demand.size());
+        VerifierNew ver_new(global::g_demand, calculate_quantile_index(0.95, X_results.size()));
         if (ver.verify(X_results))
         {
-            int price = ver.calculate_price(X_results);
-            printf("verify:total price is %d\n", price);
+            int price = round(ver_new.calculate_price(X_results));
+            printf("verify: total price is %d\n", price);
         }
         else
         {
