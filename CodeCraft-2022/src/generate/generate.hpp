@@ -27,7 +27,6 @@ namespace generate
             }
 
             const int stream_nums = global::g_demand.stream_client_demand[time].id_local_stream_2_stream_name.size();
-            answer.init(stream_nums);
 
             for (int client_id = 0; client_id < g_num_client; client_id++)
             {

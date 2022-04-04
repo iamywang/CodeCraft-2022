@@ -129,10 +129,43 @@ typedef struct _ANSWER
     std::vector<int> sum_flow_site;                 //各个服务器的实际总流量
     std::vector<double> cost;                       //各个服务器的成本
 
-    _ANSWER(){};
+    _ANSWER(){}
+    _ANSWER(_ANSWER&& rhs)
+    {
+        idx_global_mtime = rhs.idx_global_mtime;
+        flow = std::move(rhs.flow);
+        stream2server_id = std::move(rhs.stream2server_id);
+        sum_flow_site = std::move(rhs.sum_flow_site);
+        cost = std::move(rhs.cost);
+    }
+    _ANSWER& operator=(_ANSWER&& rhs)
+    {
+        idx_global_mtime = rhs.idx_global_mtime;
+        flow = std::move(rhs.flow);
+        stream2server_id = std::move(rhs.stream2server_id);
+        sum_flow_site = std::move(rhs.sum_flow_site);
+        cost = std::move(rhs.cost);
+        return *this;
+    }
+    _ANSWER& operator=(const _ANSWER& rhs)
+    {
+        idx_global_mtime = rhs.idx_global_mtime;
+        flow = rhs.flow;
+        stream2server_id = rhs.stream2server_id;
+        sum_flow_site = rhs.sum_flow_site;
+        cost = rhs.cost;
+        return *this;
+    }
     ~_ANSWER() {}
+
+    /**
+     * @brief 只允许在初始化ANSWER时使用一次
+     * 
+     * @param num_stream 
+     */
     void init(const int num_stream)
     {
+        flow.resize(g_num_client, std::vector<int>(g_num_server, 0));
         stream2server_id.resize(num_stream, std::vector<int>(g_num_client, -1));
         sum_flow_site.resize(g_num_server, 0);
         cost.resize(g_num_server, 0);

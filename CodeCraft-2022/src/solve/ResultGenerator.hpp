@@ -29,6 +29,10 @@ namespace solve
 
         ~ResultGenerator() {}
 
+        /**
+         * @brief 初始化解。会对ANSWER.flow, ANSWER.sum_flow_site, ANSWER.cost进行初始化。
+         * 
+         */
         virtual void generate_initial_X_results() = 0;
 
     };

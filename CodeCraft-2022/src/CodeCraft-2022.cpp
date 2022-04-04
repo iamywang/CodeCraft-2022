@@ -32,8 +32,6 @@ bool task(const int left,
           const bool is_generated_initial_results,
           std::vector<ANSWER> &X_results)
 {
-    // DEMAND demand;
-    // DEMAND::slice(demand, left, right);
 
     std::vector<int> idx_global_demand;
     for (int i = left; i <= right; i++)
@@ -41,7 +39,6 @@ bool task(const int left,
         idx_global_demand.push_back(i);
     }
     solve::Solver solver(X_results,
-                         // demand,
                          std::move(idx_global_demand));
     if (solver.solve(num_iteration, is_generated_initial_results) == 0)
     {
@@ -51,7 +48,6 @@ bool task(const int left,
     {
         return false;
     }
-    //*/
 }
 
 /**
@@ -77,23 +73,15 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
             return false;
 
         //合并
-        // DEMAND demand;
         std::vector<int> idx_global_demand;
-        // demand.clear();
         for (auto &X : X_results)
         {
-            // demand.client_demand.push_back(global::g_demand.client_demand[X.idx_global_mtime]);
-            // demand.stream_client_demand.push_back(global::g_demand.stream_client_demand[X.idx_global_mtime]);
-            // demand.mtime.push_back(global::g_demand.mtime[X.idx_global_mtime]);
             idx_global_demand.push_back(X.idx_global_mtime);
         }
         for (auto &X : X_results_right)
         {
-            // demand.client_demand.push_back(global::g_demand.client_demand[X.idx_global_mtime]);
-            // demand.stream_client_demand.push_back(global::g_demand.stream_client_demand[X.idx_global_mtime]);
-            // demand.mtime.push_back(global::g_demand.mtime[X.idx_global_mtime]);
             idx_global_demand.push_back(X.idx_global_mtime);
-            X_results.push_back(X);
+            X_results.push_back(std::move(X));
         }
 
         {
@@ -103,7 +91,6 @@ bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_resu
                 num_iteration = 200;
             }
             solve::Solver solver(X_results,
-                                 //  demand,
                                  std::move(idx_global_demand));
             if (solver.solve(num_iteration, false) == 0)
             {
@@ -143,58 +130,57 @@ int main()
 #ifdef MULTI_THREAD
     {
         vector<ANSWER> X_results_tmp[NUM_THREAD];
-        vector<std::future<bool>> rets_vec;
-        const int step = (int)global::g_demand.client_demand.size() / NUM_THREAD + 1;
-        for (int i = 0; i < NUM_THREAD; i++)
         {
-            int left = i * step;
-            int right = (i + 1) * step - 1;
-            if (right >= global::g_demand.client_demand.size())
-                right = global::g_demand.client_demand.size() - 1;
-            rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
-                                                    { return divide_conquer(left, right, X_results_tmp[i]); }));
+            vector<std::future<bool>> rets_vec;
+            const int step = (int)global::g_demand.client_demand.size() / NUM_THREAD + 1;
+            for (int i = 0; i < NUM_THREAD; i++)
+            {
+                int left = i * step;
+                int right = (i + 1) * step - 1;
+                if (right >= global::g_demand.client_demand.size())
+                    right = global::g_demand.client_demand.size() - 1;
+                rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
+                                                        { return divide_conquer(left, right, X_results_tmp[i]); }));
+            }
+            for (auto &ret : rets_vec)
+            {
+                ret.get();
+            }
         }
-        bool flag = true;
-        for (auto &ret : rets_vec)
-        {
-            flag &= ret.get();
-        }
-        rets_vec.clear();
 
         vector<vector<ANSWER> *> X_results_vec_for_last_merge;
         {
-            //*
+            vector<std::future<bool>> rets_vec;
             int idx_begin = 0;
             for (int i = 0; i < NUM_THREAD - 1; i += 2)
             {
-                X_results_tmp[i].insert(X_results_tmp[i].end(), X_results_tmp[i + 1].begin(), X_results_tmp[i + 1].end());
+                // X_results_tmp[i].insert(X_results_tmp[i].end(), X_results_tmp[i + 1].begin(), X_results_tmp[i + 1].end());
+                for(auto &X : X_results_tmp[i+1])
+                {
+                    X_results_tmp[i].push_back(std::move(X));
+                }
+
                 X_results_vec_for_last_merge.push_back(&X_results_tmp[i]);
 
                 rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
                                                         { return task(idx_begin, idx_begin + X_results_tmp[i].size() - 1, 100, false, X_results_tmp[i]); }));
                 idx_begin += X_results_tmp[i].size();
             }
-
             for (auto &ret : rets_vec)
             {
-                flag &= ret.get();
+                ret.get();
             }
-            rets_vec.clear();
-            //*/
-
-            /*
-            for(auto& v : X_results_tmp)
-            {
-                X_results_vec_for_last_merge.push_back(&v);
-            }
-            //*/
         }
 
         for (int i = 0; i < X_results_vec_for_last_merge.size(); ++i)
         {
-            X_results.insert(X_results.end(), X_results_vec_for_last_merge[i]->begin(), X_results_vec_for_last_merge[i]->end());
+            // X_results.insert(X_results.end(), X_results_vec_for_last_merge[i]->begin(), X_results_vec_for_last_merge[i]->end());
+            for (auto &X : *X_results_vec_for_last_merge[i])
+            {
+                X_results.push_back(std::move(X));
+            }
         }
-        task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
+        task(0, global::g_demand.client_demand.size() - 1, 10000, false, X_results);
     }
     //*/
 #else

@@ -10,6 +10,10 @@ namespace solve
         XSolverGreedyAlgorithm(CommonDataForResultGenrator &common_data) : ResultGenerator(common_data) {}
         ~XSolverGreedyAlgorithm() {}
 
+        /**
+         * @brief 初始化解。会对ANSWER.flow, ANSWER.sum_flow_site, ANSWER.cost进行初始化。
+         *
+         */
         void generate_initial_X_results()
         {
             m_max_5_percent_flow_vec.clear();
@@ -19,10 +23,10 @@ namespace solve
             m_X_results.resize(m_idx_global_demand.size());
 
             // 求解每一时刻的X
-            for(int idx = 0; idx < m_server_supported_flow_2_time_vec.size(); idx++)
+            for (int idx = 0; idx < m_server_supported_flow_2_time_vec.size(); idx++)
             // for (auto &server_supported_flow : m_server_supported_flow_2_time_vec)
             {
-                auto& server_supported_flow = m_server_supported_flow_2_time_vec[idx];
+                auto &server_supported_flow = m_server_supported_flow_2_time_vec[idx];
 
                 //取出对应时刻的demand
                 vector<int> &demand_at_mtime = global::g_demand.client_demand[server_supported_flow[0].idx_global_mtime];
@@ -30,6 +34,10 @@ namespace solve
                 ANSWER &ans = m_X_results[idx];
                 ans.idx_global_mtime = server_supported_flow[0].idx_global_mtime;
 
+                {
+                    const int stream_nums = global::g_demand.stream_client_demand[server_supported_flow[0].idx_global_mtime].id_local_stream_2_stream_name.size();
+                    ans.init(stream_nums);
+                }
                 solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, server_supported_flow, ans);
             }
             return;
@@ -74,13 +82,9 @@ namespace solve
                      ANSWER &ans //行代表客户，列表示边缘节点
         )
         {
+
             auto &X = ans.flow;
-            //初始化X
-            X.resize(demand.size());
-            for (int i = 0; i < demand.size(); i++)
-            {
-                X[i] = vector<int>(g_qos.site_name.size(), 0); //这里必须初始化为0
-            }
+
 
             const static int max_5_percent_flow_size = demand.size() - (int)((demand.size() - 1) * 0.95 + 1) + 1;
 
@@ -149,7 +153,8 @@ namespace solve
             for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
             {
                 int tmp = MyUtils::Tools::sum_column(ans.flow, site_id);
-                ans.sum_flow_site.push_back(tmp);
+                ans.sum_flow_site[site_id] = (tmp);
+                ans.cost[site_id] = (ANSWER::calculate_cost(site_id, tmp));
             }
             return;
         }
@@ -171,10 +176,8 @@ namespace solve
             {
                 const string &mtime = global::g_demand.mtime[m_idx_global_demand[index]];
 
-
                 //取出对应时刻的demand
                 vector<int> &demand_at_mtime = global::g_demand.client_demand[m_idx_global_demand[index]];
-
 
                 ANSWER &ans = m_X_results[index];
                 ans.idx_global_mtime = global::g_demand.get_global_index(mtime);
@@ -250,13 +253,13 @@ namespace solve
             }
 
             {
-                //verify
-                // int sum_dem = std::accumulate(demand.begin(), demand.end(), 0);
-                // if(sum_dem != max_flow)
-                // {
-                //     cout << "sum_dem != max_flow, error" << endl;
-                //     exit(-1);
-                // }
+                // verify
+                //  int sum_dem = std::accumulate(demand.begin(), demand.end(), 0);
+                //  if(sum_dem != max_flow)
+                //  {
+                //      cout << "sum_dem != max_flow, error" << endl;
+                //      exit(-1);
+                //  }
             }
             return;
         }
