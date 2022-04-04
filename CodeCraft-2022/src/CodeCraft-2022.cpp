@@ -154,7 +154,6 @@ int main()
             int idx_begin = 0;
             for (int i = 0; i < NUM_THREAD - 1; i += 2)
             {
-                // X_results_tmp[i].insert(X_results_tmp[i].end(), X_results_tmp[i + 1].begin(), X_results_tmp[i + 1].end());
                 for (auto &X : X_results_tmp[i + 1])
                 {
                     X_results_tmp[i].push_back(std::move(X));
@@ -165,7 +164,7 @@ int main()
                 rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
                                                         { return task(idx_begin,
                                                                       idx_begin + X_results_tmp[i].size() - 1,
-                                                                      100,
+                                                                      300,
                                                                       false,
                                                                       X_results_tmp[i]); }));
                 idx_begin += X_results_tmp[i].size();
@@ -178,13 +177,12 @@ int main()
 
         for (int i = 0; i < X_results_vec_for_last_merge.size(); ++i)
         {
-            // X_results.insert(X_results.end(), X_results_vec_for_last_merge[i]->begin(), X_results_vec_for_last_merge[i]->end());
             for (auto &X : *X_results_vec_for_last_merge[i])
             {
                 X_results.push_back(std::move(X));
             }
         }
-        task(0, global::g_demand.client_demand.size() - 1, 10000, false, X_results);
+        // task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
     }
     //*/
 #else
@@ -194,36 +192,66 @@ int main()
     }
 #endif
 
+    std::vector<ANSWER> best_X_results;
+
+    int last_price = INT32_MAX;
+
+    for (int i = 0; i < 100; i++)
     {
-        if (Verifier::verify(X_results))
+        task(0, global::g_demand.client_demand.size() - 1, 500, false, X_results);
+
         {
-            int price = Verifier::calculate_price(X_results);
-            printf("%s: verify:total price is %d\n", __func__, price);
+#ifdef TEST
+            if (Verifier::verify(X_results))
+#endif
+
+            {
+                int price = Verifier::calculate_price(X_results);
+                printf("%s: before stream dispath verify:total price is %d\n", __func__, price);
+            }
+#ifdef TEST
+            else
+            {
+                printf("%s: solve failed\n", __func__);
+                exit(-1);
+            }
+#endif
         }
-        else
+
+        // test_solver(X_results);
+        generate::allocate_flow_to_stream(X_results);
+
         {
-            printf("%s: solve failed\n", __func__);
-            exit(-1);
+#ifdef TEST
+            if (Verifier::verify(X_results) && Verifier::verify_stream(X_results))
+#endif
+            {
+                int price = Verifier::calculate_price(X_results);
+                if (last_price > price)
+                {
+                    last_price = price;
+                    best_X_results = X_results;
+                    printf("best price is %d\n", last_price);
+                }
+                printf("%s: after stream dispath verify:total price is %d\n", __func__, price);
+            }
+#ifdef TEST
+            else
+            {
+                printf("%s: solve failed\n", __func__);
+                exit(-1);
+            }
+#endif
+        }
+
+        if (MyUtils::Tools::getCurrentMillisecs() - g_start_time > G_TOTAL_DURATION * 1000)
+        {
+            break;
         }
     }
 
-    // test_solver(X_results);
-    generate::allocate_flow_to_stream(X_results);
-
-    {
-        if (Verifier::verify(X_results) && Verifier::verify_stream(X_results))
-        {
-            int price = Verifier::calculate_price(X_results);
-            printf("%s: verify:total price is %d\n", __func__, price);
-        }
-        else
-        {
-            printf("%s: solve failed\n", __func__);
-            exit(-1);
-        }
-    }
-
-    write_result(X_results);
+    write_result(best_X_results);
+    printf("best price is %d\n", last_price);
 
     printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 

@@ -147,6 +147,14 @@ typedef struct _ANSWER
         cost = std::move(rhs.cost);
         return *this;
     }
+    _ANSWER(const _ANSWER& rhs)
+    {
+        idx_global_mtime = rhs.idx_global_mtime;
+        flow = rhs.flow;
+        stream2server_id = rhs.stream2server_id;
+        sum_flow_site = rhs.sum_flow_site;
+        cost = rhs.cost;
+    }
     _ANSWER& operator=(const _ANSWER& rhs)
     {
         idx_global_mtime = rhs.idx_global_mtime;

@@ -69,7 +69,7 @@ namespace solve
                           { return a.server_index < b.server_index; });
             }
 
-            optimize2::Optimizer(
+            optimize::Optimizer(
                 // demand,
                 m_common_data.m_idx_global_demand,
                 X_results)
