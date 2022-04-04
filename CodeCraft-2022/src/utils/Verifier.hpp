@@ -153,7 +153,7 @@ public:
 
     ~Verifier() {}
 
-private:
+public:
     int calculate_price(const vector<ANSWER> &X_results)
     {
         vector<vector<int>> real_site_flow(g_qos.site_name.size(), vector<int>(m_current_mtime_count, 0));

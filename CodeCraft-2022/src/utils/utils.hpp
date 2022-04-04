@@ -27,6 +27,8 @@ auto parallel_for(const int start_index,
     using RetType = decltype(func(0, args...));
 
     int n = g_thread_pool.idlCount();
+    if (n == 4)
+        n = 3;
     const int step = (end_index - start_index) / (n + 1) + 1; // n+1是因为当前线程也可以处理
 
     std::vector<std::future<RetType>> futures;

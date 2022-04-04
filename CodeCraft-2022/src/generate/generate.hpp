@@ -7,6 +7,7 @@
 #include "../utils/tools.hpp"
 #include "../utils/Verifier.hpp"
 #include "../utils/Graph/MaxFlow.hpp"
+#include "../utils/utils.hpp"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ namespace generate
 {
     void allocate_flow_to_stream(vector<ANSWER> &X_results)
     {
-        for (int time = 0; time < X_results.size(); time++)
+        auto task = [&](const int time)
         {
             auto &answer = X_results[time];
             vector<vector<int>> init_flow = answer.flow;
@@ -170,6 +171,16 @@ namespace generate
                 int tmp = MyUtils::Tools::sum_column(answer.flow, site_id);
                 answer.sum_flow_site[site_id] = tmp;
             }
+        };
+        // for (int time = 0; time < X_results.size(); time++)
+        // {
+        //     task(time);
+        // }
+
+        auto vec = parallel_for(0, X_results.size(), task);
+        for(auto& ret : vec)
+        {
+            ret.get();
         }
     }
 } // namespace generate

@@ -194,7 +194,7 @@ int main()
         {
             X_results.insert(X_results.end(), X_results_vec_for_last_merge[i]->begin(), X_results_vec_for_last_merge[i]->end());
         }
-        task(0, global::g_demand.client_demand.size() - 1, 10000, false, X_results);
+        task(0, global::g_demand.client_demand.size() - 1, 1000000, false, X_results);
     }
     //*/
 #else
@@ -206,16 +206,21 @@ int main()
     // test_solver(X_results);
     generate::allocate_flow_to_stream(X_results);
 
-    // if (Verifier(global::g_demand, calculate_quantile_index(0.95, global::g_demand.client_demand.size())).verify(X_results))
-    if (Verifier(global::g_demand.client_demand.size()).verify(X_results))
     {
-        std::cout << "Verify OK!" << std::endl;
-        write_result(X_results);
+        Verifier ver(global::g_demand.client_demand.size());
+        if (ver.verify(X_results))
+        {
+            int price = ver.calculate_price(X_results);
+            printf("verify:total price is %d\n", price);
+        }
+        else
+        {
+            printf("solve failed\n");
+            exit(-1);
+        }
     }
-    else
-    {
-        printf("solve failed\n");
-    }
+
+    write_result(X_results);
 
     printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 
