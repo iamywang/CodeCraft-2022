@@ -153,6 +153,8 @@ namespace generate
                             }
                         }
 
+                        /*
+
                         // 如果分配给成本为0的节点，带来的cost
                         double cost_zero = 0;
                         if (stream_client_demand < g_minimum_cost)
@@ -175,6 +177,10 @@ namespace generate
                             cost_over = (pow(double(flow_sub_cost), 2) / double(g_site_bandwidth.bandwidth[most_match_over_site_id]) + flow_now) - g_minimum_cost;
 
                         if (most_match_zero_site_id != -1 && cost_zero - cost_over < 0)
+
+                        */
+
+                        if(most_match_zero_site_id != -1)
                         {
                             answer.set(stream_id, client_id, most_match_zero_site_id);
                             left_bandwidth[most_match_zero_site_id] -= stream_client_demand;

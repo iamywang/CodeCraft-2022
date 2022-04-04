@@ -198,7 +198,7 @@ int main()
 
     for (int i = 0; i < 100; i++)
     {
-        task(0, global::g_demand.client_demand.size() - 1, 500, false, X_results);
+        task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
 
         {
 #ifdef TEST
@@ -207,7 +207,7 @@ int main()
 
             {
                 int price = Verifier::calculate_price(X_results);
-                printf("%s: before stream dispath verify:total price is %d\n", __func__, price);
+                // printf("%s: before stream dispath verify:total price is %d\n", __func__, price);
             }
 #ifdef TEST
             else
@@ -233,7 +233,7 @@ int main()
                     best_X_results = X_results;
                     printf("best price is %d\n", last_price);
                 }
-                printf("%s: after stream dispath verify:total price is %d\n", __func__, price);
+                // printf("%s: after stream dispath verify:total price is %d\n", __func__, price);
             }
 #ifdef TEST
             else
