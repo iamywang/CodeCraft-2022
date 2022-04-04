@@ -29,7 +29,7 @@ namespace optimize
                                  flows_vec[idx].begin() + quantile,
                                  flows_vec[idx].end(),
                                  [](const SERVER_FLOW *a, const SERVER_FLOW *b)
-                                 { return a->flow < b->flow; });
+                                 { return *a->flow < *b->flow; });
                 //*/
 
                 /*
@@ -94,14 +94,14 @@ namespace optimize
             //对flows_vec_quantile从小到大排序
             std::sort(flows_vec_quantile.begin(), flows_vec_quantile.end(),
                       [](const SERVER_FLOW *a, const SERVER_FLOW *b)
-                      { return a->flow < b->flow; });
+                      { return *a->flow < *b->flow; });
         }
 
         {
             flows_vec_quantile_according_site_id.resize(flows_vec_quantile.size());
             for (const auto &i : flows_vec_quantile)
             {
-                flows_vec_quantile_according_site_id[i->site_id] = i->flow;
+                flows_vec_quantile_according_site_id[i->site_id] = *i->flow;
             }
         }
     }

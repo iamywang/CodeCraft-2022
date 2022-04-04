@@ -9,7 +9,7 @@
 #include "utils/Thread/ThreadPoll.hpp"
 #include "generate/generate.hpp"
 
-// #define MULTI_THREAD
+#define MULTI_THREAD
 
 extern void write_result(const std::vector<ANSWER> &X_results);
 
@@ -197,10 +197,9 @@ int main()
     generate::allocate_flow_to_stream(X_results);
 
     {
-        Verifier ver(global::g_demand.client_demand.size());
-        if (ver.verify(X_results))
+        if (Verifier::verify(X_results))
         {
-            int price = ver.calculate_price(X_results);
+            int price = Verifier::calculate_price(X_results);
             printf("%s: verify:total price is %d\n", __func__, price);
         }
         else

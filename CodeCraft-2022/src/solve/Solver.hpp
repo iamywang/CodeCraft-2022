@@ -77,10 +77,10 @@ namespace solve
             // if (Verifier(demand,
             //              calculate_quantile_index(0.95,
             //                                       m_common_data.m_idx_global_demand.size()))
-            if (Verifier(m_common_data.m_idx_global_demand.size())
-                    .verify(X_results))
+            if (Verifier::verify(X_results))
             {
                 cout << __func__ << ": verify success" << endl;
+                cout << __func__ << ": total price is " << Verifier::calculate_price(X_results) << endl;
             }
 
             else

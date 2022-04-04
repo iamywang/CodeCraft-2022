@@ -43,7 +43,7 @@ namespace optimize
                 auto &X = m_X_results[id_ans];
                 for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
                 {
-                    m_flows_vec_poll[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, X.sum_flow_site[site_id]};
+                    m_flows_vec_poll[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, &X.sum_flow_site[site_id], &X.cost[site_id]};
                     flows_vec[site_id][id_ans] = &m_flows_vec_poll[site_id][id_ans];
                 }
             }

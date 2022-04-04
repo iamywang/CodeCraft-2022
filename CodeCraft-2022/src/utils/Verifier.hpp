@@ -136,36 +136,22 @@ public:
 
 class Verifier
 {
-private:
-    // DEMAND m_demand;
-    int m_95_quantile_idx;
-    int m_current_mtime_count; //当前要校验的时刻数量
 
 public:
-    // Verifier(DEMAND &demand, int in_95_quantile_idx) : m_demand(demand), m_95_quantile_idx(in_95_quantile_idx) {}
-
-    /**
-     * @brief Construct a new Verifier object
-     *
-     * @param [in] current_mtime_count 当前要校验的时刻的数量
-     */
-    Verifier(int current_mtime_count) : m_current_mtime_count(current_mtime_count),
-                                        m_95_quantile_idx(calculate_quantile_index(0.95, current_mtime_count))
+    static int calculate_price(const vector<ANSWER> &X_results)
     {
-    }
+        int m_current_mtime_count = X_results.size(); //当前要校验的时刻数量
+        int m_95_quantile_idx = calculate_quantile_index(0.95, m_current_mtime_count);
 
-    ~Verifier() {}
-
-public:
-    int calculate_price(const vector<ANSWER> &X_results)
-    {
         vector<vector<double>> costs(g_num_server, vector<double>(m_current_mtime_count, 0));
-        for(auto&X : X_results)
+        for (int i = 0; i < X_results.size(); i++)
+        // for(auto&X : X_results)
         {
-            for(int id_server = 0; id_server < g_num_server; id_server++)
+            auto &X = X_results[i];
+            for (int id_server = 0; id_server < g_num_server; id_server++)
             {
-                costs[id_server][X.idx_global_mtime] = ANSWER::calculate_cost(id_server, X.sum_flow_site[id_server]);
-                if(int(costs[id_server][X.idx_global_mtime]) != int(X.cost[id_server]))
+                costs[id_server][i] = ANSWER::calculate_cost(id_server, X.sum_flow_site[id_server]);
+                if (int(costs[id_server][i]) != int(X.cost[id_server]))
                 {
                     printf("%s: costs[%d][%d] != X.cost[%d]\n", __func__, id_server, X.idx_global_mtime, id_server);
                     exit(-1);
@@ -187,9 +173,11 @@ public:
         return sum;
     }
 
-public:
-    bool verify(const vector<ANSWER> &X_results)
+    static bool verify(const vector<ANSWER> &X_results)
     {
+        int current_mtime_count = X_results.size(); //当前要校验的时刻数量
+        int quantile_95_idx = calculate_quantile_index(0.95, current_mtime_count);
+
         for (const auto &X : X_results)
         {
             const auto &flow = X.flow;
@@ -209,7 +197,7 @@ public:
                     printf("X.sum_flow_site[%d] = %d, but real bandwidth[%d] = %d\n", site_id, X.sum_flow_site[site_id], site_id, g_site_bandwidth.bandwidth[site_id]);
                     return false;
                 }
-                if(int(ANSWER::calculate_cost(site_id, sum)) != int(X.cost[site_id]))//成本不一致，退出
+                if (int(ANSWER::calculate_cost(site_id, sum)) != int(X.cost[site_id])) //成本不一致，退出
                 {
                     printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
                     printf("X.cost[%d] = %f, but real cost = %f\n", site_id, X.cost[site_id], ANSWER::calculate_cost(site_id, sum));
@@ -236,14 +224,6 @@ public:
                     return false;
                 }
             }
-        }
-
-        {
-#ifdef TEST
-            //下面计算成本
-            int price = calculate_price(X_results);
-            printf("%s: verify:total price is %d\n", __func__, price);
-#endif
         }
         return true;
     }
