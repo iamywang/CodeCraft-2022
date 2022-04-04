@@ -43,9 +43,7 @@ namespace solve
             auto &server_supported_flow_2_time_vec =
                 m_common_data.m_server_supported_flow_2_time_vec;
             auto &X_results = m_common_data.m_X_results;
-            // auto &demand = m_common_data.m_demand;
 
-            // solve::Utils::sort_by_demand_and_qos(demand, m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
             solve::Utils::sort_by_demand_and_qos(m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
 
             if (is_generate_initial_results)
@@ -82,12 +80,12 @@ namespace solve
             if (Verifier(m_common_data.m_idx_global_demand.size())
                     .verify(X_results))
             {
-                cout << "verify success" << endl;
+                cout << __func__ << ": verify success" << endl;
             }
 
             else
             {
-                printf("verify failed\n");
+                printf("%s: verify failed\n", __func__);
                 return -1;
             }
 #endif

@@ -9,7 +9,7 @@
 #include "utils/Thread/ThreadPoll.hpp"
 #include "generate/generate.hpp"
 
-#define MULTI_THREAD
+// #define MULTI_THREAD
 
 extern void write_result(const std::vector<ANSWER> &X_results);
 
@@ -189,8 +189,8 @@ int main()
     //*/
 #else
     {
-        divide_conquer(0, global::g_demand.client_demand.size() - 1, X_results);
-        // task(0, global::g_demand.client_demand.size() - 1, 10000, true, X_results);
+        // divide_conquer(0, global::g_demand.client_demand.size() - 1, X_results);
+        task(0, global::g_demand.client_demand.size() - 1, 100, true, X_results);
     }
 #endif
     // test_solver(X_results);
@@ -201,11 +201,11 @@ int main()
         if (ver.verify(X_results))
         {
             int price = ver.calculate_price(X_results);
-            printf("verify:total price is %d\n", price);
+            printf("%s: verify:total price is %d\n", __func__, price);
         }
         else
         {
-            printf("solve failed\n");
+            printf("%s: solve failed\n", __func__);
             exit(-1);
         }
     }

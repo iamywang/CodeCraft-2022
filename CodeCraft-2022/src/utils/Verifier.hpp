@@ -159,26 +159,30 @@ public:
 public:
     int calculate_price(const vector<ANSWER> &X_results)
     {
-        vector<vector<int>> real_site_flow(g_qos.site_name.size(), vector<int>(m_current_mtime_count, 0));
-        for (int t = 0; t < X_results.size(); t++)
+        vector<vector<double>> costs(g_num_server, vector<double>(m_current_mtime_count, 0));
+        for(auto&X : X_results)
         {
-            const auto &X = X_results[t];
-            for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+            for(int id_server = 0; id_server < g_num_server; id_server++)
             {
-                real_site_flow[site_id][t] = X.sum_flow_site[site_id];
+                costs[id_server][X.idx_global_mtime] = ANSWER::calculate_cost(id_server, X.sum_flow_site[id_server]);
+                if(int(costs[id_server][X.idx_global_mtime]) != int(X.cost[id_server]))
+                {
+                    printf("%s: costs[%d][%d] != X.cost[%d]\n", __func__, id_server, X.idx_global_mtime, id_server);
+                    exit(-1);
+                }
             }
         }
 
-        for (auto &v : real_site_flow)
+        for (auto &v : costs)
         {
             //从小到大排序
             std::sort(v.begin(), v.end());
         }
 
-        int sum = 0;
-        for (int i = 0; i < real_site_flow.size(); i++)
+        double sum = 0;
+        for (int i = 0; i < g_num_server; i++)
         {
-            sum += real_site_flow[i][m_95_quantile_idx];
+            sum += costs[i][m_95_quantile_idx];
         }
         return sum;
     }
@@ -203,6 +207,12 @@ public:
                 {
                     printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
                     printf("X.sum_flow_site[%d] = %d, but real bandwidth[%d] = %d\n", site_id, X.sum_flow_site[site_id], site_id, g_site_bandwidth.bandwidth[site_id]);
+                    return false;
+                }
+                if(int(ANSWER::calculate_cost(site_id, sum)) != int(X.cost[site_id]))//成本不一致，退出
+                {
+                    printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
+                    printf("X.cost[%d] = %f, but real cost = %f\n", site_id, X.cost[site_id], ANSWER::calculate_cost(site_id, sum));
                     return false;
                 }
             }
@@ -232,7 +242,7 @@ public:
 #ifdef TEST
             //下面计算成本
             int price = calculate_price(X_results);
-            printf("verify:total price is %d\n", price);
+            printf("%s: verify:total price is %d\n", __func__, price);
 #endif
         }
         return true;
