@@ -217,11 +217,12 @@ namespace generate
                 }
             }
 
-            // 更新sum_flow_site
+            // 更新sum_flow_site和cost
             for (int site_id = 0; site_id < g_num_server; site_id++)
             {
                 int tmp = MyUtils::Tools::sum_column(answer.flow, site_id);
                 answer.sum_flow_site[site_id] = tmp;
+                answer.cost[site_id] = answer.calculate_cost(site_id, tmp);
             }
         };
         // for (int time = 0; time < X_results.size(); time++)

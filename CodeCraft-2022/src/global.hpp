@@ -179,17 +179,17 @@ typedef struct _ANSWER
      */
     void set(const int id_stream, const int id_client, const int id_server)
     {
-        const int demand_tmp = global::g_demand.stream_client_demand[idx_global_mtime].stream_2_client_demand[id_stream][id_client];
-        if (stream2server_id[id_stream][id_client] != -1) //如果已经指定了服务器
-        {
-            int id = stream2server_id[id_stream][id_client];
-            sum_flow_site[id] -= demand_tmp;
-            cost[id] = calculate_cost(id, sum_flow_site[id]);
-        }
+        // const int demand_tmp = global::g_demand.stream_client_demand[idx_global_mtime].stream_2_client_demand[id_stream][id_client];
+        // if (stream2server_id[id_stream][id_client] != -1) //如果已经指定了服务器
+        // {
+            // int id = stream2server_id[id_stream][id_client];
+            // sum_flow_site[id] -= demand_tmp;
+            // cost[id] = calculate_cost(id, sum_flow_site[id]);
+        // }
 
         stream2server_id[id_stream][id_client] = id_server;
-        sum_flow_site[id_server] += demand_tmp;
-        cost[id_server] = calculate_cost(id_server, sum_flow_site[id_server]);
+        // sum_flow_site[id_server] += demand_tmp;
+        // cost[id_server] = calculate_cost(id_server, sum_flow_site[id_server]);
     }
 
     /**
