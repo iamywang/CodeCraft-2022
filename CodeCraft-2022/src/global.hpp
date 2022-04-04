@@ -51,13 +51,7 @@ private:
     std::map<std::string, int> mtime_2_id;
 
 public:
-    /**
-     * @brief 获取对应mtime的demand的索引。这里获取的是局部索引
-     *
-     * @param time
-     * @return int
-     */
-    int get(const std::string &time)
+    void init()
     {
         if (mtime_2_id.empty())
         {
@@ -66,6 +60,16 @@ public:
                 mtime_2_id[mtime[i]] = i;
             }
         }
+    }
+
+    /**
+     * @brief 获取对应mtime的demand的索引。这里获取的是局部索引
+     *
+     * @param time
+     * @return int
+     */
+    int get(const std::string &time) 
+    {
         int ret = mtime_2_id[time];
         return ret;
     }
@@ -83,30 +87,29 @@ public:
      * @param [in] left
      * @param [in] right
      */
-    static void slice(_DEMAND &dem, int left, int right)
-    {
-        dem.clear();
-        for (int i = left; i <= right; i++)
-        {
-            dem.stream_client_demand.push_back(s_demand.stream_client_demand[i]);
-            dem.mtime.push_back(s_demand.mtime[i]);
-            dem.client_demand.push_back(s_demand.client_demand[i]);
-        }
-    }
+    // static void slice(_DEMAND &dem, int left, int right)
+    // {
+    //     dem.clear();
+    //     for (int i = left; i <= right; i++)
+    //     {
+    //         dem.stream_client_demand.push_back(s_demand.stream_client_demand[i]);
+    //         dem.mtime.push_back(s_demand.mtime[i]);
+    //         dem.client_demand.push_back(s_demand.client_demand[i]);
+    //     }
+    // }
 
-    void clear()
-    {
-        mtime_2_id.clear();
-        mtime.clear();
-        stream_client_demand.clear();
-        client_demand.clear();
-    }
+    // void clear()
+    // {
+    //     mtime_2_id.clear();
+    //     mtime.clear();
+    //     stream_client_demand.clear();
+    //     client_demand.clear();
+    // }
 
 } DEMAND;
 
 namespace global
 {
-
     extern DEMAND &g_demand;
 }
 
@@ -121,8 +124,6 @@ extern QOS g_qos;
 typedef struct _ANSWER
 {
     int idx_global_mtime;                           //该解在当前时刻在global::g_demand中对应的时刻的index
-    int idx_local_mtime;                            //该解在当前时刻在局部demand中对应的时刻的index
-    std::string mtime;                              //时刻某个时刻的分配方案 // TODO 我觉得这里可以删去该变量
     std::vector<std::vector<int>> flow;             //行是客户，列是边缘节点
     std::vector<std::vector<int>> stream2server_id; //行是stream,列是client，值是server_id。由于相应的stream对client的需求可以为0，因此对应的值会是-1
     std::vector<int> sum_flow_site;                 //各个服务器的实际总流量
@@ -187,8 +188,6 @@ typedef struct _ANSWER
 typedef struct _SERVER_SUPPORTED_FLOW
 {
     int idx_global_mtime; //该解在当前时刻在global::g_demand中对应的时刻的index
-    int idx_local_mtime;  //该解在当前时刻在局部demand中对应的时刻的index
-    std::string mtime;
     int max_flow;
     int server_index;
 } SERVER_SUPPORTED_FLOW;

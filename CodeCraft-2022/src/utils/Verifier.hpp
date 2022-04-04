@@ -82,7 +82,9 @@ public:
                     {
                         if (isAlloc == false)
                         {
-                            printf("%s: ", X.mtime.c_str());
+                            // printf("%s: ", X.mtime.c_str());
+                            printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
+
                             printf("client[%d]: %s, stream[%d]: %s is allocated to server[%d]: %s, but real demand is: 0\n",
                                    client_id, global::g_demand.client_name[client_id].c_str(),
                                    stream_id, global::g_demand.stream_client_demand[time].id_local_stream_2_stream_name[stream_id].c_str(),
@@ -93,7 +95,9 @@ public:
                     }
                     else if (isAlloc == true && server_id == -1)
                     {
-                        printf("%s: ", X.mtime.c_str());
+                        // printf("%s: ", X.mtime.c_str());
+                        printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
+
                         printf("client[%d]: %s, stream[%d]: %s is not allocated to any server, but real demand is: %d\n",
                                client_id, global::g_demand.client_name[client_id].c_str(),
                                stream_id, global::g_demand.stream_client_demand[time].id_local_stream_2_stream_name[stream_id].c_str(),
@@ -108,13 +112,13 @@ public:
                 int sum = server_sum_flow[site_id];
                 if (sum != X.sum_flow_site[site_id])
                 {
-                    printf("%s: ", X.mtime.c_str());
+                    printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
                     printf("X.sum_flow_site[%d] = %d, but real sum = %d\n", site_id, X.sum_flow_site[site_id], sum);
                     return false;
                 }
                 else if (X.sum_flow_site[site_id] > g_site_bandwidth.bandwidth[site_id])
                 {
-                    printf("%s: ", X.mtime.c_str());
+                    printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
                     printf("X.sum_flow_site[%d] = %d, but real bandwidth[%d] = %d\n", site_id, X.sum_flow_site[site_id], site_id, g_site_bandwidth.bandwidth[site_id]);
                     return false;
                 }
@@ -138,7 +142,6 @@ private:
     int m_current_mtime_count; //当前要校验的时刻数量
 
 public:
-
     // Verifier(DEMAND &demand, int in_95_quantile_idx) : m_demand(demand), m_95_quantile_idx(in_95_quantile_idx) {}
 
     /**
@@ -192,13 +195,13 @@ public:
                 int sum = MyUtils::Tools::sum_column(X.flow, site_id);
                 if (sum != X.sum_flow_site[site_id])
                 {
-                    printf("%s: ", X.mtime.c_str());
+                    printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
                     printf("X.sum_flow_site[%d] = %d, but real sum = %d\n", site_id, X.sum_flow_site[site_id], sum);
                     return false;
                 }
                 else if (X.sum_flow_site[site_id] > g_site_bandwidth.bandwidth[site_id])
                 {
-                    printf("%s: ", X.mtime.c_str());
+                    printf("%s: ", global::g_demand.mtime[X.idx_global_mtime].c_str());
                     printf("X.sum_flow_site[%d] = %d, but real bandwidth[%d] = %d\n", site_id, X.sum_flow_site[site_id], site_id, g_site_bandwidth.bandwidth[site_id]);
                     return false;
                 }
@@ -210,17 +213,15 @@ public:
                 {
                     if ((flow[client_id][j] && g_qos.qos[j][client_id] <= 0) || flow[client_id][j] < 0)
                     {
-                        cout << X.mtime << " client " << g_qos.client_name[client_id] << " server " << g_qos.site_name[j] << endl;
+                        cout << global::g_demand.mtime[X.idx_global_mtime] << " client " << g_qos.client_name[client_id] << " server " << g_qos.site_name[j] << endl;
                         return false;
                     }
                 }
 
                 int sum = std::accumulate(flow[client_id].begin(), flow[client_id].end(), 0); //客户的流量总和
-                // if (sum != this->m_demand.client_demand[X.idx_local_mtime][client_id])
                 if (sum != global::g_demand.client_demand[X.idx_global_mtime][client_id])
                 {
-                    // cout << X.mtime << " " << client_id << " " << sum << " " << this->m_demand.client_demand[X.idx_local_mtime][client_id] << endl;
-                    cout << X.mtime << " " << client_id << " " << sum << " " << global::g_demand.client_demand[X.idx_global_mtime][client_id] << endl;
+                    cout << global::g_demand.mtime[X.idx_global_mtime] << " " << client_id << " " << sum << " " << global::g_demand.client_demand[X.idx_global_mtime][client_id] << endl;
                     cout << "sum is not equal demand" << endl;
                     return false;
                 }

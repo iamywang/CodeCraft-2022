@@ -19,31 +19,17 @@ namespace solve
             m_X_results.resize(m_idx_global_demand.size());
 
             // 求解每一时刻的X
-            for (auto &server_supported_flow : m_server_supported_flow_2_time_vec)
+            for(int idx = 0; idx < m_server_supported_flow_2_time_vec.size(); idx++)
+            // for (auto &server_supported_flow : m_server_supported_flow_2_time_vec)
             {
-                const auto &mtime = server_supported_flow[0].mtime;
-                const int index = server_supported_flow[0].idx_local_mtime;
-
-#ifdef TEST
-                if (index == -1)
-                {
-                    char buf[1024];
-                    sprintf(buf, "mtime: %s not found in demand", mtime.c_str());
-                    throw runtime_error(string(buf));
-                }
-#endif
+                auto& server_supported_flow = m_server_supported_flow_2_time_vec[idx];
 
                 //取出对应时刻的demand
-                // vector<int> &demand_at_mtime = m_demand.client_demand[index];
-                vector<int> &demand_at_mtime = global::g_demand.client_demand[global::g_demand.get_global_index(mtime)];
-                
+                vector<int> &demand_at_mtime = global::g_demand.client_demand[server_supported_flow[0].idx_global_mtime];
 
-                ANSWER &ans = m_X_results[index];
-                // ans.idx_global_mtime = m_demand.get_global_index(mtime);
-                ans.idx_global_mtime = global::g_demand.get_global_index(mtime);
+                ANSWER &ans = m_X_results[idx];
+                ans.idx_global_mtime = server_supported_flow[0].idx_global_mtime;
 
-                ans.idx_local_mtime = index;
-                ans.mtime = mtime;
                 solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, server_supported_flow, ans);
             }
             return;
@@ -183,21 +169,15 @@ namespace solve
             // 求解每一时刻的X
             for (int index = 0; index < m_idx_global_demand.size(); index++)
             {
-                // const string &mtime = m_demand.mtime[index];
                 const string &mtime = global::g_demand.mtime[m_idx_global_demand[index]];
 
 
                 //取出对应时刻的demand
-                // vector<int> &demand_at_mtime = m_demand.client_demand[index];
                 vector<int> &demand_at_mtime = global::g_demand.client_demand[m_idx_global_demand[index]];
 
 
                 ANSWER &ans = m_X_results[index];
-                // ans.idx_global_mtime = m_demand.get_global_index(mtime);
                 ans.idx_global_mtime = global::g_demand.get_global_index(mtime);
-
-                ans.idx_local_mtime = index;
-                ans.mtime = mtime;
                 solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, ans);
             }
             return;

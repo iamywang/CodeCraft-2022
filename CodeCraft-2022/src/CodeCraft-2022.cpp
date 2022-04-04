@@ -194,7 +194,7 @@ int main()
         {
             X_results.insert(X_results.end(), X_results_vec_for_last_merge[i]->begin(), X_results_vec_for_last_merge[i]->end());
         }
-        task(0, global::g_demand.client_demand.size() - 1, 1000000, false, X_results);
+        task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
     }
     //*/
 #else

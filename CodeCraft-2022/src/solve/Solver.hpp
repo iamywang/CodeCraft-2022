@@ -52,10 +52,7 @@ namespace solve
             {
                 m_result_generator->generate_initial_X_results();
             }
-            // for (auto &X : X_results)
-            // {
-            //     X.idx_local_mtime = demand.get(X.mtime);
-            // }
+
 
             //根据时间对X_results进行排序
             std::sort(X_results.begin(), X_results.end(), [this](const ANSWER &a, const ANSWER &b)

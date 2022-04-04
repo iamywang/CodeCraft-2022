@@ -152,7 +152,7 @@ void read_demand(DEMAND &dem)
         // }
     }
 
-    global::g_demand.get(global::g_demand.mtime[0]); //防止后续多线程由于都是第一次访问get导致的同时写问题
+    global::g_demand.init(); //防止后续多线程由于都是第一次访问get导致的同时写问题
 
     return;
 }
