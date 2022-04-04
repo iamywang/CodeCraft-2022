@@ -30,6 +30,7 @@ aux_source_directory(. DIR_SRCS)
 add_subdirectory(utils)
 add_subdirectory(data_in_out)
 add_subdirectory(optimize)
+add_subdirectory(optimize2)
 add_subdirectory(solve)
 
 
