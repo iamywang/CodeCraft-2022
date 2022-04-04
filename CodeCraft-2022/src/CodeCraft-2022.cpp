@@ -8,105 +8,12 @@
 #include "utils/Verifier.hpp"
 #include "utils/Thread/ThreadPoll.hpp"
 #include "generate/generate.hpp"
+#include "heuristic/HeuristicAlgorithm.hpp"
+#include "DivideConquer.hpp"
 
 #define MULTI_THREAD
 
 extern void write_result(const std::vector<ANSWER> &X_results);
-
-const int NUM_MINIUM_PER_BLOCK = 200; //最小分组中每组最多有多少个元素
-const int NUM_ITERATION = 200;        //最小分组的最大迭代次数
-
-/**
- * @brief 前闭后闭区间
- *
- * @param left
- * @param right
- * @param num_iteration
- * @param X_results
- * @return true
- * @return false
- */
-bool task(const int left,
-          const int right,
-          const int num_iteration,
-          const bool is_generated_initial_results,
-          std::vector<ANSWER> &X_results)
-{
-
-    std::vector<int> idx_global_demand;
-    for (int i = left; i <= right; i++)
-    {
-        idx_global_demand.push_back(i);
-    }
-    solve::Solver solver(X_results,
-                         std::move(idx_global_demand));
-    if (solver.solve(num_iteration, is_generated_initial_results) == 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**
- * @brief 前闭后闭区间。通过分治方法计算最优解
- *
- * @param [in] left
- * @param [in] right
- * @param [out] X_results
- * @return true
- * @return false
- */
-bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_results)
-{
-    if (right - left > NUM_MINIUM_PER_BLOCK)
-    {
-        int mid = (left + right) / 2;
-        std::vector<ANSWER> X_results_right;
-
-        if (!divide_conquer(left, mid, X_results))
-            return false;
-
-        if (!divide_conquer(mid + 1, right, X_results_right))
-            return false;
-
-        //合并
-        std::vector<int> idx_global_demand;
-        for (auto &X : X_results)
-        {
-            idx_global_demand.push_back(X.idx_global_mtime);
-        }
-        for (auto &X : X_results_right)
-        {
-            idx_global_demand.push_back(X.idx_global_mtime);
-            X_results.push_back(std::move(X));
-        }
-
-        {
-            int num_iteration = NUM_ITERATION;
-            if (X_results.size() > 1000)
-            {
-                num_iteration = 200;
-            }
-            solve::Solver solver(X_results,
-                                 std::move(idx_global_demand));
-            if (solver.solve(num_iteration, false) == 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-    }
-    else
-    {
-        return task(left, right, NUM_ITERATION, true, X_results);
-    }
-}
 
 int main()
 {
@@ -140,7 +47,7 @@ int main()
                 if (right >= global::g_demand.client_demand.size())
                     right = global::g_demand.client_demand.size() - 1;
                 rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
-                                                        { return divide_conquer(left, right, X_results_tmp[i]); }));
+                                                        { return DivideConquer::divide_conquer(left, right, X_results_tmp[i]); }));
             }
             for (auto &ret : rets_vec)
             {
@@ -162,11 +69,11 @@ int main()
                 X_results_vec_for_last_merge.push_back(&X_results_tmp[i]);
 
                 rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
-                                                        { return task(idx_begin,
-                                                                      idx_begin + X_results_tmp[i].size() - 1,
-                                                                      300,
-                                                                      false,
-                                                                      X_results_tmp[i]); }));
+                                                        { return DivideConquer::task(idx_begin,
+                                                                                     idx_begin + X_results_tmp[i].size() - 1,
+                                                                                     300,
+                                                                                     false,
+                                                                                     X_results_tmp[i]); }));
                 idx_begin += X_results_tmp[i].size();
             }
             for (auto &ret : rets_vec)
@@ -182,7 +89,7 @@ int main()
                 X_results.push_back(std::move(X));
             }
         }
-        // task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
+        DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
     }
     //*/
 #else
@@ -192,66 +99,12 @@ int main()
     }
 #endif
 
-    std::vector<ANSWER> best_X_results;
+    generate::allocate_flow_to_stream(X_results);
 
-    int last_price = INT32_MAX;
+    heuristic::HeuristicAlgorithm heuristic_algorithm(X_results);
+    heuristic_algorithm.optimize();
 
-    for (int i = 0; i < 100; i++)
-    {
-        task(0, global::g_demand.client_demand.size() - 1, 500, false, X_results);
-
-        {
-#ifdef TEST
-            if (Verifier::verify(X_results))
-#endif
-
-            {
-                int price = Verifier::calculate_price(X_results);
-                printf("%s: before stream dispath verify:total price is %d\n", __func__, price);
-            }
-#ifdef TEST
-            else
-            {
-                printf("%s: solve failed\n", __func__);
-                exit(-1);
-            }
-#endif
-        }
-
-        // test_solver(X_results);
-        generate::allocate_flow_to_stream(X_results);
-
-        {
-#ifdef TEST
-            if (Verifier::verify(X_results) && Verifier::verify_stream(X_results))
-#endif
-            {
-                int price = Verifier::calculate_price(X_results);
-                if (last_price > price)
-                {
-                    last_price = price;
-                    best_X_results = X_results;
-                    printf("best price is %d\n", last_price);
-                }
-                printf("%s: after stream dispath verify:total price is %d\n", __func__, price);
-            }
-#ifdef TEST
-            else
-            {
-                printf("%s: solve failed\n", __func__);
-                exit(-1);
-            }
-#endif
-        }
-
-        if (MyUtils::Tools::getCurrentMillisecs() - g_start_time > G_TOTAL_DURATION * 1000)
-        {
-            break;
-        }
-    }
-
-    write_result(best_X_results);
-    printf("best price is %d\n", last_price);
+    write_result(heuristic_algorithm.m_best_results);
 
     printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 
