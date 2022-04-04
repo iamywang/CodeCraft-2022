@@ -193,11 +193,25 @@ int main()
         task(0, global::g_demand.client_demand.size() - 1, 100, true, X_results);
     }
 #endif
+
+    {
+        if (Verifier::verify(X_results))
+        {
+            int price = Verifier::calculate_price(X_results);
+            printf("%s: verify:total price is %d\n", __func__, price);
+        }
+        else
+        {
+            printf("%s: solve failed\n", __func__);
+            exit(-1);
+        }
+    }
+
     // test_solver(X_results);
     generate::allocate_flow_to_stream(X_results);
 
     {
-        if (Verifier::verify(X_results))
+        if (Verifier::verify(X_results) && Verifier::verify_stream(X_results))
         {
             int price = Verifier::calculate_price(X_results);
             printf("%s: verify:total price is %d\n", __func__, price);
