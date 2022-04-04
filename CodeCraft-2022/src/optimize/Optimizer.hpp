@@ -29,11 +29,10 @@ namespace optimize
     public:
         Optimizer(
             // const DEMAND &demand,
-                  const std::vector<int> &idx_global_demand,
-                  vector<ANSWER> &X_results_) : 
-                //   m_demand(demand),
-                                                m_idx_global_demand(idx_global_demand),
-                                                m_X_results(X_results_)
+            const std::vector<int> &idx_global_demand,
+            vector<ANSWER> &X_results_) : //   m_demand(demand),
+                                          m_idx_global_demand(idx_global_demand),
+                                          m_X_results(X_results_)
         {
             m_flows_vec_poll.resize(g_site_bandwidth.site_name.size(), vector<SERVER_FLOW>(this->m_idx_global_demand.size()));
             flows_vec.resize(g_site_bandwidth.site_name.size(), vector<SERVER_FLOW *>(this->m_idx_global_demand.size()));
@@ -43,13 +42,12 @@ namespace optimize
                 auto &X = m_X_results[id_ans];
                 for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
                 {
-                    m_flows_vec_poll[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, &X.sum_flow_site[site_id], &X.cost[site_id]};
+                    m_flows_vec_poll[site_id][id_ans] = SERVER_FLOW{id_ans, site_id, X.sum_flow_site[site_id]};
                     flows_vec[site_id][id_ans] = &m_flows_vec_poll[site_id][id_ans];
                 }
             }
         }
         ~Optimizer() {}
-
 
     public:
         /**
@@ -125,6 +123,18 @@ namespace optimize
                 printf("%d\n", sum);
 #endif
             }
+
+            auto rets = parallel_for(0, m_X_results.size(), [this](int i)
+                                     {
+                                        auto&X = this->m_X_results[i];
+                                        for(int id_server = 0; id_server < g_num_server; id_server++)
+                                        {
+                                            X.cost[id_server] = ANSWER::calculate_cost(id_server, X.sum_flow_site[id_server]);
+                                        } 
+                                    });
+            for (auto &i : rets)
+                i.get();
+            return;
         }
     };
 
