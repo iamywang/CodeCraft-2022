@@ -45,12 +45,12 @@ namespace generate
         }
 
         // 计算初始解的成本
-        double init_cost = 0;
-        for (int i = 0; i < real_site_flow.size(); i++)
-        {
-            init_cost += X_results[0].calculate_cost(i, quantile_flow[i]);
-        }
-        printf("generate: initial results total price is %.0f\n", round(init_cost));
+        // double init_cost = 0;
+        // for (int i = 0; i < real_site_flow.size(); i++)
+        // {
+        //     init_cost += X_results[0].calculate_cost(i, quantile_flow[i]);
+        // }
+        // printf("generate: initial results total price is %.0f\n", round(init_cost));
 
         // 根据初始解进行流量分配
         auto task = [&](const int time)
