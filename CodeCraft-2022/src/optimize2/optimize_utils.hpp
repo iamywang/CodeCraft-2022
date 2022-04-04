@@ -14,5 +14,5 @@ namespace optimize2
     void get_server_flow_vec_by_quantile(const int quantile,
                                          vector<vector<SERVER_FLOW*>> &cost_vec,
                                          vector<SERVER_FLOW*> &cost_vec_quantile,
-                                         vector<double> &cost_vec_quantile_according_site_id);
+                                         vector<int> &cost_vec_quantile_according_site_id);
 } // namespace optimize

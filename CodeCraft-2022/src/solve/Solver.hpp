@@ -6,6 +6,8 @@
 #include <algorithm>
 #include "../optimize/optimize_interface.hpp"
 #include "../optimize/Optimizer.hpp"
+#include "../optimize2/Optimizer.hpp"
+
 #include "../utils/tools.hpp"
 #include "../utils/Verifier.hpp"
 #include "../utils/Graph/MaxFlow.hpp"
@@ -67,7 +69,7 @@ namespace solve
                           { return a.server_index < b.server_index; });
             }
 
-            optimize::Optimizer(
+            optimize2::Optimizer(
                 // demand,
                 m_common_data.m_idx_global_demand,
                 X_results)

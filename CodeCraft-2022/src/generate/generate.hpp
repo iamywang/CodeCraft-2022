@@ -50,7 +50,7 @@ namespace generate
         {
             init_cost += X_results[0].calculate_cost(i, quantile_flow[i]);
         }
-        printf("generate: total price is %.0f\n", round(init_cost));
+        printf("generate: initial results total price is %.0f\n", round(init_cost));
 
         // 根据初始解进行流量分配
         auto task = [&](const int time)

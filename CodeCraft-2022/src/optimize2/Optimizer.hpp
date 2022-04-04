@@ -109,7 +109,7 @@ namespace optimize2
             {
 //做测试用，输出最终的结果的成本
 #ifdef TEST
-                vector<double> flows_vec_95_according_site_id(g_qos.client_name.size(), 0);
+                vector<int> flows_vec_95_according_site_id(g_qos.client_name.size(), 0);
                 {
                     int idx = calculate_quantile_index(0.95, this->m_idx_global_demand.size());
 

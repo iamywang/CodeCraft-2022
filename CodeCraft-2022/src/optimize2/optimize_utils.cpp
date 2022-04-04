@@ -12,12 +12,12 @@ namespace optimize2
      * @param quantile 百分位数对应索引值
      * @param [in|out] cost_vec 会对 cost_vec 的值进行部分排序，只是为了拿到规定的quantile的值
      * @param [out] cost_vec_quantile_vec 只记录第quantile百分位数的的SERVER_FLOW，根据flow从小到大排序
-     * @param [out] cost_vec_quantile_vec_idx 按照site_id进行索引的第quantile的流量值
+     * @param [out] flows_vec_quantile_vec_idx 按照site_id进行索引的第quantile的流量值
      */
     void get_server_flow_vec_by_quantile(const int quantile,
                                          vector<vector<SERVER_FLOW *>> &cost_vec,
                                          vector<SERVER_FLOW *> &cost_vec_quantile,
-                                         vector<double> &cost_vec_quantile_according_site_id)
+                                         vector<int> &flows_vec_quantile_according_site_id)
     {
         { //提取quantile百分位数的SERVER_FLOW
             cost_vec_quantile.resize(cost_vec.size());
@@ -89,10 +89,10 @@ namespace optimize2
         }
 
         {
-            cost_vec_quantile_according_site_id.resize(cost_vec_quantile.size());
+            flows_vec_quantile_according_site_id.resize(cost_vec_quantile.size());
             for (const auto &i : cost_vec_quantile)
             {
-                cost_vec_quantile_according_site_id[i->site_id] = *i->cost;
+                flows_vec_quantile_according_site_id[i->site_id] = *i->flow;
             }
         }
     }

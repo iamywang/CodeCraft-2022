@@ -46,21 +46,21 @@ namespace optimize2
         ~Dispather() {}
 
     private:
-        int adjust_flow_up_limit(const vector<double> &cost_vec_95_according_site_id,
+        int adjust_flow_up_limit(const vector<int> &flows_vec_95_according_site_id,
                                  const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
                                  const ANSWER &X,
                                  const SERVER_FLOW &quantile_server_flow,
                                  const int id_server_to_add)
         {
             int added = 0;
-            if (X.sum_flow_site[id_server_to_add] > cost_vec_95_according_site_id[id_server_to_add]) //当前节点的流量大于95%分位，那么可以肆无忌惮地增加
+            if (X.sum_flow_site[id_server_to_add] > flows_vec_95_according_site_id[id_server_to_add]) //当前节点的流量大于95%分位，那么可以肆无忌惮地增加
             {
                 added = server_supported_flow[id_server_to_add].max_flow - X.sum_flow_site[id_server_to_add]; //该边缘节点允许增加的流量，由于本身是在后5%，因此可以让该边缘节点跑满
             }
             else //否则不能超过95%分位的限制
             {
                 added = std::min(server_supported_flow[id_server_to_add].max_flow,
-                                 int(cost_vec_95_according_site_id[id_server_to_add] * 0.9)) -
+                                 int(flows_vec_95_according_site_id[id_server_to_add] * 0.4)) -
                         X.sum_flow_site[id_server_to_add];
             }
 
@@ -69,7 +69,7 @@ namespace optimize2
         }
 
         bool update_X(ANSWER &X,
-                      const vector<double> &cost_vec_95_according_site_id,
+                      const vector<int> &flows_vec_95_according_site_id,
                       const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
                       const SERVER_FLOW &quantile_server_flow)
         {
@@ -89,6 +89,9 @@ namespace optimize2
                 }
 
                 int added = 0; //表示可以调整的流量上限
+
+// #define USE_MATH_ANSLYSE
+#ifdef USE_MATH_ANSLYSE
 
                 {
                     int id1 = server_id;
@@ -155,16 +158,19 @@ namespace optimize2
                     }
                 }
 
-                added = std::max(added, this->adjust_flow_up_limit(cost_vec_95_according_site_id,
+                added = std::max(added, this->adjust_flow_up_limit(flows_vec_95_according_site_id,
                                                                    server_supported_flow,
                                                                    X,
                                                                    quantile_server_flow,
                                                                    server_id));
-                // added = this->adjust_flow_up_limit(cost_vec_95_according_site_id,
-                //                                    server_supported_flow,
-                //                                    X,
-                //                                    quantile_server_flow,
-                //                                    server_id);
+#else
+                added = this->adjust_flow_up_limit(flows_vec_95_according_site_id,
+                                                   server_supported_flow,
+                                                   X,
+                                                   quantile_server_flow,
+                                                   server_id);
+#endif
+#undef USE_MATH_ANSLYSE
 
                 //这里确定好了最多能分配给该边缘节点最多多少流量，即added
                 if (added > 0)
@@ -225,21 +231,21 @@ namespace optimize2
             bool ret = false;
 
             vector<SERVER_FLOW *> cost_vec_quantile;
-            vector<double> cost_vec_quantile_according_site_id;
-            get_server_flow_vec_by_quantile(quantile, m_cost_vec, cost_vec_quantile, cost_vec_quantile_according_site_id);
+            vector<int> flows_vec_quantile_according_site_id;
+            get_server_flow_vec_by_quantile(quantile, m_cost_vec, cost_vec_quantile, flows_vec_quantile_according_site_id);
 
-            vector<double> cost_vec_95_according_site_id(cost_vec_quantile_according_site_id.size(), 0);
+            vector<int> flows_vec_95_according_site_id(flows_vec_quantile_according_site_id.size(), 0);
             {
                 int idx = calculate_quantile_index(0.95, this->m_idx_global_demand.size());
                 if (idx == quantile)
                 {
-                    cost_vec_95_according_site_id = cost_vec_quantile_according_site_id;
+                    flows_vec_95_according_site_id = flows_vec_quantile_according_site_id;
                 }
                 else
                 {
                     vector<SERVER_FLOW *> flows_vec_quantile2;
                     get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_idx_global_demand.size()),
-                                                    m_cost_vec, flows_vec_quantile2, cost_vec_95_according_site_id);
+                                                    m_cost_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
                 }
             }
 
@@ -268,7 +274,7 @@ namespace optimize2
                 ANSWER &X = m_X_results[min_quantile_server_flow.ans_id];
                 const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[min_quantile_server_flow.ans_id];
 
-                ret = update_X(X, cost_vec_95_according_site_id, server_supported_flow, min_quantile_server_flow);
+                ret = update_X(X, flows_vec_95_according_site_id, server_supported_flow, min_quantile_server_flow);
             }
             return ret;
         }
@@ -278,16 +284,22 @@ namespace optimize2
             bool ret = false;
 
             vector<SERVER_FLOW *> cost_vec_95_percent;
-            vector<double> cost_vec_95_according_site_id;
+            vector<int> flows_vec_95_according_site_id;
             get_server_flow_vec_by_quantile(max_95_percent_index,
                                             m_cost_vec,
                                             cost_vec_95_percent,
-                                            cost_vec_95_according_site_id);
+                                            flows_vec_95_according_site_id);
 
             {
 #ifdef TEST
-                double sum = std::accumulate(cost_vec_95_according_site_id.begin(), cost_vec_95_according_site_id.end(), 0);
-                printf("%f\n", sum);
+                double price_sum(0);
+                for (const auto &item : cost_vec_95_percent)
+                {
+                    price_sum += *item->cost;
+                }
+                printf("price_sum: %f\n", price_sum);
+                int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
+                printf("flows: %d\n", sum);
 #endif
             }
 
@@ -299,7 +311,7 @@ namespace optimize2
                 const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[max_95_server_flow.ans_id];
 
                 ret = update_X(X,
-                               cost_vec_95_according_site_id,
+                               flows_vec_95_according_site_id,
                                // flows_vec_low_limit_according_site_id,
                                server_supported_flow,
                                max_95_server_flow);
