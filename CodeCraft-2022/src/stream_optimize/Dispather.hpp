@@ -172,13 +172,14 @@ namespace stream_optimize
 #endif
 #undef USE_MATH_ANSLYSE
 
-                //这里确定好了最多能分配给该边缘节点最多多少流量，即added
+                // 这里确定好了最多能分配给该边缘节点最多多少流量，即added
                 while (added > 0)
                 {
                     int most_match_stream_id = -1;
                     int most_match_client_id = -1;
                     double match_percent = 0;
                     int match_demand = 0;
+
                     // 挑选占added比例最大的带宽需求进行调整
                     for (int stream_id = 0; stream_id < X.stream2server_id.size(); stream_id++)
                     {
@@ -195,7 +196,7 @@ namespace stream_optimize
                                 const int current_demand = global::g_demand.stream_client_demand[X.idx_global_mtime].stream_2_client_demand[stream_id][client_id];
                                 if (current_demand <= added)
                                 {
-                                    if (most_match_stream_id == -1 || match_percent < (double)current_demand / added)
+                                    if (match_demand == 0 || match_percent < (double)current_demand / added)
                                     {
                                         most_match_stream_id = stream_id;
                                         most_match_client_id = client_id;
@@ -208,25 +209,29 @@ namespace stream_optimize
                     }
 
                     // 没有分配到，跳出while循环
-                    if (most_match_stream_id == -1)
+                    if (match_demand == 0)
                     {
                         added = 0;
                         break;
                     }
-                    //调整分配方案
+                    
+                    // 可以分配流量，调整分配方案
                     else
                     {
                         ret = true;
                         added -= match_demand;
 
+                        // 调整流量-客户端分配矩阵
                         X.stream2server_id[most_match_stream_id][most_match_client_id] = server_id;
 
+                        // 更新被调整服务器的流量
                         X.sum_flow_site[server_id] += match_demand;
                         X.sum_flow_site[quantile_server_flow.site_id] -= match_demand;
 
                         X.flow[most_match_client_id][server_id] += match_demand;
                         X.flow[most_match_client_id][quantile_server_flow.site_id] -= match_demand;
 
+                        // 更新被调整服务器的成本
                         X.cost[server_id] = ANSWER::calculate_cost(server_id, X.sum_flow_site[server_id]);
                         X.cost[quantile_server_flow.site_id] = ANSWER::calculate_cost(quantile_server_flow.site_id,
                                                                                       X.sum_flow_site[quantile_server_flow.site_id]);
