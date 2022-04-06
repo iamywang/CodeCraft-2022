@@ -34,6 +34,7 @@ add_subdirectory(utils)
 add_subdirectory(data_in_out)
 add_subdirectory(optimize)
 add_subdirectory(optimize2)
+add_subdirectory(stream_optimize)
 add_subdirectory(solve)
 
 
@@ -43,5 +44,5 @@ add_subdirectory(solve)
 add_executable(CodeCraft-2022 ${DIR_SRCS} )
 
 
-target_link_libraries(CodeCraft-2022 utils data_in_out optimize optimize2)
+target_link_libraries(CodeCraft-2022 utils data_in_out optimize optimize2 stream_optimize)
 target_link_libraries(CodeCraft-2022 PRIVATE Threads::Threads)
