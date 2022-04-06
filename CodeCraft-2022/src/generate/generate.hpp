@@ -20,19 +20,44 @@ namespace generate
         int quantile_idx = calculate_quantile_index(0.95, X_results.size());
 
         vector<vector<int>> real_site_flow(g_qos.site_name.size(), vector<int>(X_results.size(), 0));
-        for (int t = 0; t < X_results.size(); t++)
         {
-            const auto &X = X_results[t];
-            for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+            auto task = [&](int t)
             {
-                real_site_flow[site_id][t] = X.sum_flow_site[site_id];
+                const auto &X = X_results[t];
+                for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+                {
+                    real_site_flow[site_id][t] = X.sum_flow_site[site_id];
+                }
+            };
+            auto rets = parallel_for(0, X_results.size(), task);
+            // for (int t = 0; t < X_results.size(); t++)
+            // {
+            //     const auto &X = X_results[t];
+            //     for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+            //     {
+            //         real_site_flow[site_id][t] = X.sum_flow_site[site_id];
+            //     }
+            // }
+            for(auto& i : rets)
+            {
+                i.get();
             }
         }
-
-        for (auto &v : real_site_flow)
         {
-            //从小到大排序
-            std::sort(v.begin(), v.end());
+            auto task = [&real_site_flow](int t)
+            {
+                std::sort(real_site_flow[t].begin(), real_site_flow[t].end());
+            };
+            auto rets = parallel_for(0, g_qos.site_name.size(), task);
+            for(auto&i : rets)
+            {
+                i.get();
+            }
+            // for (auto &v : real_site_flow)
+            // {
+            //     //从小到大排序
+            //     std::sort(v.begin(), v.end());
+            // }
         }
 
         for (int i = 0; i < real_site_flow.size(); i++)
@@ -206,7 +231,8 @@ namespace generate
             }
 
             // 更新flow, sum_flow_site和cost
-            answer.flow.resize(g_num_client, vector<int>(g_num_server, 0));
+            // answer.flow.resize(g_num_client, vector<int>(g_num_server, 0));
+            answer.flow = vector<vector<int>>(g_num_client, vector<int>(g_num_server, 0));
             for (int client_id = 0; client_id < g_num_client; client_id++)
             {
                 for (int stream_id = 0; stream_id < stream_nums; stream_id++)
