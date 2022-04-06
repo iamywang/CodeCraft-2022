@@ -29,19 +29,13 @@ namespace generate
             }
         }
 
-        for (auto &v : real_site_flow)
-        {
-            //从小到大排序
-            std::sort(v.begin(), v.end());
-        }
-
         for (int i = 0; i < real_site_flow.size(); i++)
         {
+            //从小到大排序
+            auto &v = real_site_flow[i];
+            std::sort(v.begin(), v.end());
             const int flow = real_site_flow[i][quantile_idx];
-            if (flow > 0)
-                quantile_flow[i] = max(flow, g_minimum_cost);
-            else
-                quantile_flow[i] = 0;
+            quantile_flow[i] = (flow > 0) ? max(flow, g_minimum_cost) : 0;
         }
 
         // 计算初始解的成本
