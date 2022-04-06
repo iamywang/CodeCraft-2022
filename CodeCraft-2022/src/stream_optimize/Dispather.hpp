@@ -60,7 +60,7 @@ namespace stream_optimize
             else //否则不能超过95%分位的限制
             {
                 added = std::min(server_supported_flow[id_server_to_add].max_flow,
-                                 int(flows_vec_95_according_site_id[id_server_to_add] * 0.3)) -
+                                 int(flows_vec_95_according_site_id[id_server_to_add] * 0.4)) -
                         X.sum_flow_site[id_server_to_add];
             }
 
@@ -185,7 +185,7 @@ namespace stream_optimize
                     {
                         for (int client_id = 0; client_id < g_num_client; client_id++)
                         {
-                            if (X.stream2server_id[stream_id][client_id] == server_id)
+                            if (X.stream2server_id[stream_id][client_id] == quantile_server_flow.site_id)
                             {
                                 if (g_qos.qos[server_id][client_id] == 0)
                                 {

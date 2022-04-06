@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "../optimize/optimize_interface.hpp"
 #include "../optimize/Optimizer.hpp"
-#include "../optimize2/Optimizer.hpp"
+#include "../stream_optimize/Optimizer.hpp"
 
 #include "../utils/tools.hpp"
 #include "../utils/Verifier.hpp"
@@ -53,7 +53,6 @@ namespace solve
                 m_result_generator->generate_initial_X_results();
             }
 
-
             //根据时间对X_results进行排序
             std::sort(X_results.begin(), X_results.end(), [this](const ANSWER &a, const ANSWER &b)
                       { return a.idx_global_mtime < b.idx_global_mtime; });
@@ -91,6 +90,36 @@ namespace solve
                 return -1;
             }
 #endif
+            return 0;
+        }
+
+        int solve_stream(const int num_iteration)
+        {
+            auto &server_supported_flow_2_time_vec = m_common_data.m_server_supported_flow_2_time_vec;
+            auto &X_results = m_common_data.m_X_results;
+
+            solve::Utils::sort_by_demand_and_qos(m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
+
+            //根据时间对X_results进行排序
+            std::sort(X_results.begin(), X_results.end(), [this](const ANSWER &a, const ANSWER &b)
+                      { return a.idx_global_mtime < b.idx_global_mtime; });
+
+            //根据时间对server_supported_flow_2_time_vec排序
+            std::sort(server_supported_flow_2_time_vec.begin(), server_supported_flow_2_time_vec.end(), [this](const vector<SERVER_SUPPORTED_FLOW> &a, const vector<SERVER_SUPPORTED_FLOW> &b)
+                      { return a[0].idx_global_mtime < b[0].idx_global_mtime; });
+
+            for (auto &v : server_supported_flow_2_time_vec)
+            {
+                //按照server_id排序
+                std::sort(v.begin(), v.end(), [](const SERVER_SUPPORTED_FLOW &a, const SERVER_SUPPORTED_FLOW &b)
+                          { return a.server_index < b.server_index; });
+            }
+
+            stream_optimize::Optimizer(
+                // demand,
+                m_common_data.m_idx_global_demand,
+                X_results)
+                .optimize(server_supported_flow_2_time_vec, num_iteration);
             return 0;
         }
     };

@@ -101,10 +101,23 @@ int main()
 
     generate::allocate_flow_to_stream(X_results);
 
-    heuristic::HeuristicAlgorithm heuristic_algorithm(X_results);
-    heuristic_algorithm.optimize();
+    printf("best price is %d\n", Verifier::calculate_price(X_results));
 
-    write_result(*heuristic_algorithm.m_best_X_results);
+    // heuristic::HeuristicAlgorithm heuristic_algorithm(X_results);
+    // heuristic_algorithm.optimize();
+
+    // write_result(*heuristic_algorithm.m_best_X_results);
+
+    std::vector<int> idx_global_demand;
+    for (auto &X : X_results)
+    {
+        idx_global_demand.push_back(X.idx_global_mtime);
+    }
+    solve::Solver solver(X_results, std::move(idx_global_demand));
+    solver.solve_stream(10000);
+
+    write_result(X_results);
+    printf("best price is %d\n", Verifier::calculate_price(X_results));
 
     printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 
