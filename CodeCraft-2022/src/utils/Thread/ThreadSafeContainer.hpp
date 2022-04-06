@@ -41,19 +41,19 @@ template < typename _T, typename _Sequence > class ThreadSafeContainer
         //并且不是始终按照低地址对象(按照高地址对象加锁也可以)顺序加锁
         //那么就会发生死锁。一号线程先加锁了a，二号线程先加锁了b。
         //这样一号线程就会等待二号线程释放b的锁，而二号线程则会等待一号释放a的锁
-        // ThreadSafeContainer &l = ( this < &other ) ? ( *this ) : other;
-        // ThreadSafeContainer &r = ( this > &other ) ? ( *this ) : other;
-        // std::unique_lock< std::timed_mutex > l_lock( l.mt_mutex );
-        // std::unique_lock< std::timed_mutex > r_lock( r.mt_mutex );
-        // this->__filled_space_sem = other.__filled_space_sem;
-        // this->__spaces = other.__spaces;
-        // return *this;
-
-        // c++17提供了一种方式可以避免不同线程之间上锁的问题，不再需要自己处理
-        std::scoped_lock< std::timed_mutex, std::timed_mutex > lock{
-            this->mt_mutex, other.mt_mutex };
+        ThreadSafeContainer &l = ( this < &other ) ? ( *this ) : other;
+        ThreadSafeContainer &r = ( this > &other ) ? ( *this ) : other;
+        std::unique_lock< std::timed_mutex > l_lock( l.mt_mutex );
+        std::unique_lock< std::timed_mutex > r_lock( r.mt_mutex );
+        this->__filled_space_sem = other.__filled_space_sem;
         this->__spaces = other.__spaces;
         return *this;
+
+        // c++17提供了一种方式可以避免不同线程之间上锁的问题，不再需要自己处理
+        // std::scoped_lock< std::timed_mutex, std::timed_mutex > lock{
+        //     this->mt_mutex, other.mt_mutex };
+        // this->__spaces = other.__spaces;
+        // return *this;
     }
 
     ThreadSafeContainer &operator=( ThreadSafeContainer &other )

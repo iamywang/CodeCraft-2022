@@ -104,7 +104,7 @@ int main()
     heuristic::HeuristicAlgorithm heuristic_algorithm(X_results);
     heuristic_algorithm.optimize();
 
-    write_result(heuristic_algorithm.m_best_results);
+    write_result(*heuristic_algorithm.m_best_X_results);
 
     printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 

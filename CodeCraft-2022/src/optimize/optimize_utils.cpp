@@ -19,17 +19,20 @@ namespace optimize
                                          vector<SERVER_FLOW *> &flows_vec_quantile,
                                          vector<int> &flows_vec_quantile_according_site_id)
     {
+        auto compare_func = [](SERVER_FLOW *a, SERVER_FLOW *b)
+        {
+            return a->flow < b->flow;
+        };
         { //提取quantile百分位数的SERVER_FLOW
             flows_vec_quantile.resize(flows_vec.size());
 
-            auto task = [&flows_vec, &flows_vec_quantile, &quantile](int idx)
+            auto task = [&](int idx)
             {
                 //*
                 std::nth_element(flows_vec[idx].begin(),
                                  flows_vec[idx].begin() + quantile,
                                  flows_vec[idx].end(),
-                                 [](const SERVER_FLOW *a, const SERVER_FLOW *b)
-                                 { return a->flow < b->flow; });
+                                 compare_func);
                 //*/
 
                 /*
@@ -93,8 +96,7 @@ namespace optimize
         {
             //对flows_vec_quantile从小到大排序
             std::sort(flows_vec_quantile.begin(), flows_vec_quantile.end(),
-                      [](const SERVER_FLOW *a, const SERVER_FLOW *b)
-                      { return a->flow < b->flow; });
+                      compare_func);
         }
 
         {

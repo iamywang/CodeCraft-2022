@@ -179,6 +179,15 @@ typedef struct _ANSWER
         cost.resize(g_num_server, 0);
     }
 
+    static void swap(_ANSWER &a, _ANSWER &b)
+    {
+        std::swap(a.idx_global_mtime, b.idx_global_mtime);
+        a.flow.swap(b.flow);
+        a.stream2server_id.swap(b.stream2server_id);
+        a.sum_flow_site.swap(b.sum_flow_site);
+        a.cost.swap(b.cost);
+    }
+
     /**
      * @brief 设置id_stream||id_client对应要分配的服务器编号，并计算相应服务器的总流量和成本。
      * 如果该流之前就已经被分配了某个服务器，那么之前的服务器的流量和成本也会相应调整。

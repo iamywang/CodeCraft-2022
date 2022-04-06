@@ -124,16 +124,20 @@ namespace optimize
 #endif
             }
 
-            auto rets = parallel_for(0, m_X_results.size(), [this](int i)
-                                     {
-                                        auto&X = this->m_X_results[i];
-                                        for(int id_server = 0; id_server < g_num_server; id_server++)
-                                        {
-                                            X.cost[id_server] = ANSWER::calculate_cost(id_server, X.sum_flow_site[id_server]);
-                                        } 
-                                    });
-            for (auto &i : rets)
-                i.get();
+            // auto rets = parallel_for(0, m_X_results.size(), [this](int i)
+            //                          {
+            //                             if(i > this->m_X_results.size())
+            //                             {
+            //                                 throw runtime_error("i > this->m_X_results.size()");
+            //                                 exit(-1);
+            //                             }
+            //                             auto&X = this->m_X_results[i];
+            //                             for(int id_server = 0; id_server < g_num_server; id_server++)
+            //                             {
+            //                                 X.cost[id_server] = ANSWER::calculate_cost(id_server, X.sum_flow_site[id_server]);
+            //                             } });
+            // for (auto &i : rets)
+            //     i.get();
             return;
         }
     };

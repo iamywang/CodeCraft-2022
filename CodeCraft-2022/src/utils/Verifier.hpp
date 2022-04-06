@@ -33,10 +33,21 @@ public:
             }
         }
 
-        for (auto &v : costs)
         {
-            //从小到大排序
-            std::sort(v.begin(), v.end());
+            // for (auto &v : costs)
+            // {
+            //     //从小到大排序
+            //     std::sort(v.begin(), v.end());
+            // }
+            auto task = [&costs, m_95_quantile_idx](int id_server)
+            { nth_element(costs[id_server].begin(),
+                          costs[id_server].begin() + m_95_quantile_idx,
+                          costs[id_server].end()); };
+            auto rets = parallel_for(0, costs.size(), task);
+            for (auto &i : rets)
+            {
+                i.get();
+            }
         }
 
         double sum = 0;
