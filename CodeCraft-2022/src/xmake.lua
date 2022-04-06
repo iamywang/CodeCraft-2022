@@ -5,6 +5,7 @@ includes("utils")
 includes("data_in_out")
 includes("optimize")
 includes("optimize2")
+includes("stream_optimize")
 includes("solve")
 
 
