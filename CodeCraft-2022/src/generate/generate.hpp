@@ -63,10 +63,7 @@ namespace generate
         for (int i = 0; i < real_site_flow.size(); i++)
         {
             const int flow = real_site_flow[i][quantile_idx];
-            if (flow > 0)
-                quantile_flow[i] = max(flow, g_minimum_cost);
-            else
-                quantile_flow[i] = 0;
+            quantile_flow[i] = (flow > 0) ? max(flow, g_minimum_cost) : 0;
         }
 
         // 计算初始解的成本
