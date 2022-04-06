@@ -116,17 +116,14 @@ namespace optimize
                     }
 
                     X.sum_flow_site[server_id] -= added;
-                    X.sum_flow_site[quantile_server_flow.site_id] += added;
-                    // X.cost[server_id] = ANSWER::calculate_cost(server_id, X.sum_flow_site[server_id]);
-                    // X.cost[quantile_server_flow.site_id] = ANSWER::calculate_cost(quantile_server_flow.site_id,
-                                                                                //  X.sum_flow_site[quantile_server_flow.site_id]);
-
                     m_flows_vec_poll[server_id][quantile_server_flow.ans_id].flow = X.sum_flow_site[server_id];
-                    m_flows_vec_poll[quantile_server_flow.site_id][quantile_server_flow.ans_id].flow = X.sum_flow_site[quantile_server_flow.site_id];
-
                     X.cost[server_id] = ANSWER::calculate_cost(server_id, X.sum_flow_site[server_id]);
-                    X.cost[quantile_server_flow.site_id] = ANSWER::calculate_cost(quantile_server_flow.site_id, X.sum_flow_site[quantile_server_flow.site_id]);
+                    m_flows_vec_poll[server_id][quantile_server_flow.ans_id].cost = X.cost[server_id];
 
+                    X.sum_flow_site[quantile_server_flow.site_id] += added;
+                    m_flows_vec_poll[quantile_server_flow.site_id][quantile_server_flow.ans_id].flow = X.sum_flow_site[quantile_server_flow.site_id];
+                    X.cost[quantile_server_flow.site_id] = ANSWER::calculate_cost(quantile_server_flow.site_id, X.sum_flow_site[quantile_server_flow.site_id]);
+                    m_flows_vec_poll[quantile_server_flow.site_id][quantile_server_flow.ans_id].cost = X.cost[quantile_server_flow.site_id];
                 }
             }
             return ret;

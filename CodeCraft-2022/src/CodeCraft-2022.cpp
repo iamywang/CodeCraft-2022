@@ -89,7 +89,7 @@ int main()
                 X_results.push_back(std::move(X));
             }
         }
-        DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
+        // DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
     }
     //*/
 #else
