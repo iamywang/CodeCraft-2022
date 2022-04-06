@@ -180,7 +180,7 @@ namespace generate
 
                         */
 
-                        if(most_match_zero_site_id != -1)
+                        if (most_match_zero_site_id != -1)
                         {
                             answer.set(stream_id, client_id, most_match_zero_site_id);
                             left_bandwidth[most_match_zero_site_id] -= stream_client_demand;
@@ -205,25 +205,18 @@ namespace generate
                 }
             }
 
-            // 更新一遍flow
-            for (int site_id = 0; site_id < g_num_server; site_id++)
+            // 更新flow, sum_flow_site和cost
+            answer.flow.resize(g_num_client, vector<int>(g_num_server, 0));
+            for (int client_id = 0; client_id < g_num_client; client_id++)
             {
-                for (int client_id = 0; client_id < g_num_client; client_id++)
-                {
-                    answer.flow[client_id][site_id] = 0;
-                }
-            }
-
-            for (int stream_id = 0; stream_id < stream_nums; stream_id++)
-            {
-                for (int client_id = 0; client_id < g_num_client; client_id++)
+                for (int stream_id = 0; stream_id < stream_nums; stream_id++)
                 {
                     const int stream_client_demand = global::g_demand.stream_client_demand[time].stream_2_client_demand[stream_id][client_id];
-                    answer.flow[client_id][answer.stream2server_id[stream_id][client_id]] += stream_client_demand;
+                    const int site_id = answer.stream2server_id[stream_id][client_id];
+                    answer.flow[client_id][site_id] += stream_client_demand;
                 }
             }
 
-            // 更新sum_flow_site和cost
             for (int site_id = 0; site_id < g_num_server; site_id++)
             {
                 int tmp = MyUtils::Tools::sum_column(answer.flow, site_id);
