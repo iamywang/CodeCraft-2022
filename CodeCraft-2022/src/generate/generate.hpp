@@ -289,6 +289,7 @@ namespace generate
                         // srand(time(NULL));
                         // if (rand() % 1000 < rate * 1000)
                         {
+                            srand(time(NULL));
                             const int site_id = X.stream2server_id[stream_id][client_id];
                             int rand_site_id = rand() % g_num_server;
 
