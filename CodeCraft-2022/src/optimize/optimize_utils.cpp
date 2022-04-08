@@ -21,8 +21,8 @@ namespace optimize
     {
         auto compare_func = [](SERVER_FLOW *a, SERVER_FLOW *b)
         {
-            // return a->flow < b->flow;
-            return a->cost < b->cost;
+            return a->flow < b->flow;
+            // return a->cost < b->cost;
         };
         { //提取quantile百分位数的SERVER_FLOW
             flows_vec_quantile.resize(flows_vec.size());

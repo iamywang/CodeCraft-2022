@@ -47,7 +47,7 @@ int main()
                 if (right >= global::g_demand.client_demand.size())
                     right = global::g_demand.client_demand.size() - 1;
                 rets_vec.push_back(g_thread_pool.commit([=, &X_results_tmp]()
-                                                        { return DivideConquer::divide_conquer(left, right, X_results_tmp[i]); }));
+                                                        { return DivideConquer::divide_conquer<true>(left, right, X_results_tmp[i]); }));
             }
             for (auto &ret : rets_vec)
             {
@@ -89,7 +89,7 @@ int main()
                 X_results.push_back(std::move(X));
             }
         }
-        // DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
+        DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
     }
     //*/
 #else
@@ -101,7 +101,7 @@ int main()
 
     generate::allocate_flow_to_stream(X_results);
 
-    printf("best price is %d\n", Verifier::calculate_price(X_results));
+    // printf("best price is %d\n", Verifier::calculate_price(X_results));
 
     heuristic::HeuristicAlgorithm heuristic_algorithm(X_results);
     heuristic_algorithm.optimize();

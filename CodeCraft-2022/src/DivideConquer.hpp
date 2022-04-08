@@ -53,17 +53,35 @@ public:
      * @return true
      * @return false
      */
-    static bool divide_conquer(const int left, const int right, std::vector<ANSWER> &X_results)
+    template <bool is_generate_new_results>
+    static bool divide_conquer(const int left,
+                               const int right,
+                               std::vector<ANSWER> &X_results)
     {
         if (right - left > NUM_MINIUM_PER_BLOCK)
         {
-            int mid = (left + right) / 2;
-            std::vector<ANSWER> X_results_right;
+            const int mid = (left + right) / 2;
 
-            if (!divide_conquer(left, mid, X_results))
+            std::vector<ANSWER> X_results_right;
+            if (!is_generate_new_results)
+            {
+                for (int i = mid + 1 - left; i <= right - left; ++i)
+                // for (int i = mid + 1; i <= right; ++i)
+                {
+                    if (i >= X_results.size())
+                    {
+                        throw runtime_error("i >= X_results.size()");
+                        exit(-1);
+                    }
+                    X_results_right.push_back(std::move(X_results[i]));
+                }
+                X_results.resize(mid - left + 1);
+            }
+
+            if (!divide_conquer<is_generate_new_results>(left, mid, X_results))
                 return false;
 
-            if (!divide_conquer(mid + 1, right, X_results_right))
+            if (!divide_conquer<is_generate_new_results>(mid + 1, right, X_results_right))
                 return false;
 
             //合并
@@ -98,7 +116,7 @@ public:
         }
         else
         {
-            return task(left, right, NUM_ITERATION, true, X_results);
+            return task(left, right, NUM_ITERATION, is_generate_new_results, X_results);
         }
     }
 };

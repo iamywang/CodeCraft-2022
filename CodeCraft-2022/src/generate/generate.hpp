@@ -300,7 +300,7 @@ namespace generate
 
                                 X.flow[client_id][rand_site_id] += stream_client_demand;
                                 X.sum_flow_site[rand_site_id] += stream_client_demand;
-                                X.cost[rand_site_id] = X.calculate_cost(site_id, X.sum_flow_site[rand_site_id]);
+                                X.cost[rand_site_id] = X.calculate_cost(rand_site_id, X.sum_flow_site[rand_site_id]);
                             }
                         }
                     }

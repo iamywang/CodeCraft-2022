@@ -17,7 +17,9 @@ namespace heuristic
         SP_VEC_ANSWER m_X_results;
         // std::vector<ANSWER>& m_X_results;
 
-        MyUtils::Thread::ThreadSafeQueue<SP_VEC_ANSWER> m_X_results_after_dispath_queue;  //优化之后的解
+        MyUtils::Thread::ThreadSafeQueue<SP_VEC_ANSWER> m_X_results_after_dispath_queue; //优化之后的解
+        // MyUtils::Thread::ThreadSafeStack<SP_VEC_ANSWER> m_X_results_after_dispath_queue;  //优化之后的解
+
         MyUtils::Thread::ThreadSafeStack<SP_VEC_ANSWER> m_X_results_before_dispath_stack; //优化之后的解
         std::atomic_bool m_is_running;
         MyUtils::Thread::ThreadPool m_thread_pool;
@@ -39,9 +41,10 @@ namespace heuristic
         void optimize()
         {
 
-            for (int i = 0; i < 100 && m_is_running.load(); i++)
+            for (int i = 0; i < 10000 && m_is_running.load(); i++)
             {
-                DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 500, false, *m_X_results);
+                // DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 300, false, *m_X_results);
+                // DivideConquer::divide_conquer<false>(0, global::g_demand.client_demand.size() - 1, *m_X_results);
 
                 {
 #ifndef COMPETITION
@@ -64,7 +67,7 @@ namespace heuristic
                 }
 
                 // test_solver(X_results);
-                generate::allocate_flow_to_stream(*m_X_results);
+                // generate::allocate_flow_to_stream(*m_X_results);
                 {
                     std::vector<int> idx_global_demand;
                     for (auto &X : *(m_X_results))
@@ -72,7 +75,7 @@ namespace heuristic
                         idx_global_demand.push_back(X.idx_global_mtime);
                     }
                     solve::Solver solver(*(m_X_results), std::move(idx_global_demand));
-                    solver.solve_stream(10);
+                    solver.solve_stream(50);
                 }
 
                 {
@@ -115,7 +118,7 @@ namespace heuristic
 
             //保证 combine 线程正确退出
             m_X_results_after_dispath_queue.put(nullptr);
-            m_X_results_after_dispath_queue.put(nullptr);
+            // m_X_results_after_dispath_queue.put(nullptr);
 
             m_thread_pool.waitAll();
             return;
@@ -170,147 +173,82 @@ namespace heuristic
                 int total_price;
                 inner_data()
                 {
-                    p_X_results = nullptr;
+                    p_X_results = std::make_shared<std::vector<ANSWER>>();
                     total_price = INT32_MAX;
                     quantile_95_costs.resize(g_num_server, 0);
                 }
-            } data[2], best_data; // data[2]保存最优解
-
-            auto task = [this, &best_data](inner_data &data_) -> bool
-            {
-                if (data_.p_X_results.get() == nullptr)
+                void copy(const inner_data &other)
                 {
-                    return false;
+                    *p_X_results = *other.p_X_results;
+                    total_price = other.total_price;
+                    // quantile_95_costs = other.quantile_95_costs;
                 }
+            } data[2], best_data;
+            best_data.p_X_results = std::make_shared<std::vector<ANSWER>>();
+            best_data.p_X_results->resize(this->m_X_results->size());
 
-                data_.total_price = HeuristicAlgorithm::calculate_price(*data_.p_X_results, data_.quantile_95_costs);
-
-#ifndef COMPETITION
-                printf("%s %d: after stream dispath total price is %d\n", __FILE__, __LINE__, data_.total_price);
-#endif
-
-                if (data_.total_price < best_data.total_price)
-                {
-                    best_data = data_;
-#ifndef COMPETITION
-                    printf("%s %d: best price is %d\n", __func__, __LINE__, best_data.total_price);
-#endif
-                }
-                return true;
-            };
-
-            auto task_swap = [](inner_data &data0, inner_data &data1, int t) -> bool
-            {
-                auto &X0 = (*data0.p_X_results)[t];
-                auto &X1 = (*data1.p_X_results)[t];
-
-                bool ret = false;
-                bool is_swap = true;
-                for (int id_server = 0; id_server < g_num_server; ++id_server)
-                {
-                    if (X1.cost[id_server] > data0.quantile_95_costs[id_server] &&
-                        X0.cost[id_server] < data0.quantile_95_costs[id_server])
-                    {
-                        is_swap = false;
-                        break;
-                    }
-                }
-                if (is_swap)
-                {
-                    ANSWER::swap(X0, X1);
-                    is_swap = true;
-                    ret = true;
-                }
-
-                return ret;
-            };
+            double T = 100, alpha = 0.99;
 
             while (m_is_running.load())
             {
                 data[0].p_X_results = m_X_results_after_dispath_queue.pop();
-
-                if (!task(data[0]))
+                while (m_X_results_after_dispath_queue.size() > 0)
+                {
+                    data[0].p_X_results = m_X_results_after_dispath_queue.pop();
+                }
+                if (data[0].p_X_results.get() == nullptr)
                 {
                     m_is_running.store(false);
                     break;
                 }
-
-                data[1].p_X_results = m_X_results_after_dispath_queue.pop();
-                if (!task(data[1]))
                 {
-                    m_is_running.store(false);
-                    break;
-                }
+                    int id0 = 0, id1 = 1;
+                    data[id0].total_price = HeuristicAlgorithm::calculate_price(*data[id0].p_X_results, data[id0].quantile_95_costs);
+                    cout << "data[0].total_price = " << data[id0].total_price << endl;
 
-                int id0 = 0, id1 = 1;
-                if (data[0].total_price > data[1].total_price) //保证id0指向的是小的
-                {
-                    id0 = 1, id1 = 0;
-                }
-
-                {
-                    bool swap_flag_X0_X1 = false;
-                    bool swap_flag_X01_best_data = false;
-                    for (int t = 0; t < data[0].p_X_results->size(); t++)
-                    {
-                        swap_flag_X0_X1 |= task_swap(data[id0], data[id1], t);
-                        // swap_flag_X01_best_data |= task_swap(best_data, data[id0], t);
-                        // swap_flag_X01_best_data |= task_swap(best_data, data[id1], t);
-                    }
-
-                    if (swap_flag_X0_X1)
-                    {
-                        {
-                            std::vector<int> idx_global_demand;
-                            for (auto &X : *(data[id0].p_X_results))
-                            {
-                                idx_global_demand.push_back(X.idx_global_mtime);
-                            }
-                            solve::Solver solver(*(data[id0].p_X_results), std::move(idx_global_demand));
-                            solver.solve_stream(100);
-                        }
-                        data[id0].total_price = HeuristicAlgorithm::calculate_price(*data[id0].p_X_results, data[id0].quantile_95_costs);
-                        printf("after swap, %s: data[id0].total_price is %d\n", __func__, data[id0].total_price);
-                    }
-
-                    if (swap_flag_X01_best_data)
-                    {
-                        {
-                            std::vector<int> idx_global_demand;
-                            for (auto &X : *(best_data.p_X_results))
-                            {
-                                idx_global_demand.push_back(X.idx_global_mtime);
-                            }
-                            solve::Solver solver(*(best_data.p_X_results), std::move(idx_global_demand));
-                            solver.solve_stream(100);
-                        }
-                        best_data.total_price = HeuristicAlgorithm::calculate_price(*best_data.p_X_results, best_data.quantile_95_costs);
-                        printf("after swap, %s: best_data.total_price is %d\n", __func__, best_data.total_price);
-                    }
-
-                    if (data[id0].total_price < best_data.total_price && (swap_flag_X0_X1 || swap_flag_X01_best_data))
+                    if (data[id0].total_price < best_data.total_price)
                     {
                         best_data.total_price = data[id0].total_price;
                         *best_data.p_X_results = *data[id0].p_X_results; //需要做一次拷贝
                     }
 
-                    this->m_X_results_before_dispath_stack.put(data[id0].p_X_results);
-
-                    if (swap_flag_X0_X1 || swap_flag_X01_best_data)
                     {
-                        srand(time(NULL));
-                        if (rand() % 100 < 30) // 50%的几率
+                        double delta = data[id1].total_price - data[id0].total_price;
+
+                        //按照概率接受该解
+                        double p = exp(-T / delta);
+                        if (p > (double)rand() / RAND_MAX)
                         {
+                            data[id1].copy(data[id0]);
+                            this->m_X_results_before_dispath_stack.put(data[id0].p_X_results);
+                        }
+                        else
+                        {
+                            generate::stream_mutation(*data[id0].p_X_results, 0.5, true);
                             this->m_X_results_before_dispath_stack.put(data[id1].p_X_results);
                         }
+
+                        T *= alpha;
+
+                        cout << "delta = " << delta << endl;
+                        cout << "T = " << T << endl;
+                        cout << "p = " << p << endl;
                     }
 
-                    if (rand() % 100 < 50)
-                    {
-                        SP_VEC_ANSWER p(std::make_shared<std::vector<ANSWER>>());
-                        *p = *best_data.p_X_results;
-                        m_X_results_after_dispath_queue.put(p);
-                    }
+                    // generate::stream_mutation(*data[id0].p_X_results, 0.5, true);
+                    // data[id0].total_price = HeuristicAlgorithm::calculate_price(*data[id0].p_X_results, data[id0].quantile_95_costs);
+                    // srand(time(NULL));
+                    // if (data[id0].total_price < best_data.total_price)
+                    // {
+                    //     best_data.total_price = data[id0].total_price;
+                    //     *best_data.p_X_results = *data[id0].p_X_results; //需要做一次拷贝
+                    // }
+                    // else if (rand() % 100 < 70) //当前解比最优解差
+                    // {
+                    //     *data[id0].p_X_results = *best_data.p_X_results;
+                    // }
+
+                    // this->m_X_results_before_dispath_stack.put(data[id0].p_X_results);
 
                     std::cout << "******" << __func__ << " " << __LINE__ << ": best_data.total_price is " << best_data.total_price << std::endl;
                 }
