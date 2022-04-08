@@ -263,23 +263,31 @@ namespace generate
     {
         if (isMutate)
         {
+            int num_mutate = int(rate * global::g_demand.mtime.size());
+            std::vector<int> mutate_time_index;
+            srand((unsigned)time(NULL));
+            for (int i = 0; i < num_mutate; i++)
+            {
+                mutate_time_index.push_back(rand() % global::g_demand.mtime.size());
+            }
+
             auto task = [&](const int x_time)
             {
-                auto &X = X_results[x_time];
+                auto &X = X_results[mutate_time_index[x_time]];
                 for (int client_id = 0; client_id < g_num_client; client_id++)
                 {
-                    const int stream_nums = global::g_demand.stream_client_demand[x_time].id_local_stream_2_stream_name.size();
+                    const int stream_nums = global::g_demand.stream_client_demand[mutate_time_index[x_time]].id_local_stream_2_stream_name.size();
 
                     for (int stream_id = 0; stream_id < stream_nums; stream_id++)
                     {
-                        const int stream_client_demand = global::g_demand.stream_client_demand[x_time].stream_2_client_demand[stream_id][client_id];
+                        const int stream_client_demand = global::g_demand.stream_client_demand[mutate_time_index[x_time]].stream_2_client_demand[stream_id][client_id];
                         if (stream_client_demand == 0)
                         {
                             continue;
                         }
 
-                        srand(time(NULL));
-                        if (rand() % 1000 < rate * 1000)
+                        // srand(time(NULL));
+                        // if (rand() % 1000 < rate * 1000)
                         {
                             const int site_id = X.stream2server_id[stream_id][client_id];
                             int rand_site_id = rand() % g_num_server;
@@ -300,14 +308,14 @@ namespace generate
 
                                 X.flow[client_id][rand_site_id] += stream_client_demand;
                                 X.sum_flow_site[rand_site_id] += stream_client_demand;
-                                X.cost[rand_site_id] = X.calculate_cost(site_id, X.sum_flow_site[rand_site_id]);
+                                X.cost[rand_site_id] = X.calculate_cost(rand_site_id, X.sum_flow_site[rand_site_id]);
                             }
                         }
                     }
                 }
             };
 
-            auto vec = parallel_for(0, X_results.size(), task);
+            auto vec = parallel_for(0, mutate_time_index.size(), task);
             for (auto &ret : vec)
             {
                 ret.get();
