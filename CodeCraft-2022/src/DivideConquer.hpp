@@ -24,7 +24,7 @@ public:
                      const int right,
                      const int num_iteration,
                      const bool is_generated_initial_results,
-                     std::vector<ANSWER> &X_results)
+                     std::vector<ANSWER>& X_results)
     {
 
         std::vector<int> idx_global_demand;
@@ -32,7 +32,7 @@ public:
         {
             idx_global_demand.push_back(i);
         }
-        solve::Solver solver(X_results,
+        solve::Solver solver(&X_results,
                              std::move(idx_global_demand));
         if (solver.solve(num_iteration, is_generated_initial_results) == 0)
         {
@@ -102,7 +102,7 @@ public:
                 {
                     num_iteration = 200;
                 }
-                solve::Solver solver(X_results,
+                solve::Solver solver(&X_results,
                                      std::move(idx_global_demand));
                 if (solver.solve(num_iteration, false) == 0)
                 {

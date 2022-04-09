@@ -22,7 +22,7 @@ namespace solve
                                                                     m_server_supported_flow_2_time_vec(common_data.m_server_supported_flow_2_time_vec),
                                                                     // m_demand(common_data.m_demand),
                                                                     m_idx_global_demand(common_data.m_idx_global_demand),
-                                                                    m_X_results(common_data.m_X_results)
+                                                                    m_X_results(*common_data.m_X_results)
 
         {
         }
@@ -34,7 +34,6 @@ namespace solve
          * 
          */
         virtual void generate_initial_X_results() = 0;
-
     };
 
 } // namespace solve

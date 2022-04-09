@@ -29,7 +29,7 @@ namespace solve
         ResultGenerator *m_result_generator;
 
     public:
-        Solver(std::vector<ANSWER> &X_results,
+        Solver(std::vector<ANSWER>* X_results,
                //    const DEMAND &demand,
                std::vector<int> &&idx_global_demand) : m_common_data(
                                                            //    demand,
@@ -40,11 +40,17 @@ namespace solve
         }
         ~Solver() { delete m_result_generator; }
 
+        void reset(std::vector<ANSWER>* X_results)
+        {
+            m_common_data.m_X_results = X_results;
+            // m_result_generator->reset(m_common_data);// 这个先不管了，在实际运行过程中不会出现再次初始化解的情况
+        }
+
         int solve(const int num_iteration, const bool is_generate_initial_results)
         {
             auto &server_supported_flow_2_time_vec =
                 m_common_data.m_server_supported_flow_2_time_vec;
-            auto &X_results = m_common_data.m_X_results;
+            auto &X_results = *m_common_data.m_X_results;
 
             solve::Utils::sort_by_demand_and_qos(m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
 
@@ -96,7 +102,7 @@ namespace solve
         int solve_stream(const int num_iteration)
         {
             auto &server_supported_flow_2_time_vec = m_common_data.m_server_supported_flow_2_time_vec;
-            auto &X_results = m_common_data.m_X_results;
+            auto &X_results = *m_common_data.m_X_results;
 
             solve::Utils::sort_by_demand_and_qos(m_common_data.m_idx_global_demand, server_supported_flow_2_time_vec);
 
