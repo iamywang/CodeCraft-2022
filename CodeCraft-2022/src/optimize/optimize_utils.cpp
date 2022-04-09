@@ -1,24 +1,76 @@
 #include "optimize_interface.hpp"
 #include "../utils/ProcessTimer.hpp"
+#include "../utils/utils.hpp"
 #include <iostream>
 using namespace std;
 
 namespace optimize
 {
 
+    template <typename _Compare>
+    inline SERVER_FLOW *
+    rough_nth_element(const double quantile,
+                      vector<SERVER_FLOW *> &flows_vec,
+                      _Compare __comp)
+    {
+        if(abs(quantile - 1.0) < 1e-6)
+        {
+            return *std::max_element(flows_vec.begin(), flows_vec.end(), __comp);
+        }
+        
+        const int __n = 400; //每组多少个
+        std::vector<SERVER_FLOW *> __indices;
+
+        {
+            const int right = flows_vec.size();
+            const auto __first = flows_vec.begin();
+            const int __kth = __n * quantile;
+            int left = 0;
+
+            int k = flows_vec.size() / __n; //有多少组，实际上可能是k+1组
+            for (; left < right && k; left += __n, --k)
+            {
+                nth_element(__first + left, __first + left + __kth, __first + left + __n, __comp);
+                __indices.push_back(*(__first + left + __kth));
+            }
+            if (left < right)
+            {
+                const int __kth = (flows_vec.size() - left) * quantile;
+                nth_element(__first + left, __first + left + __kth, flows_vec.end(), __comp);
+                __indices.push_back(*(__first + left + __kth));
+            }
+        }
+
+        int __kth = __indices.size() * quantile;
+        // if(__kth >= __indices.size())
+        //     __kth = __indices.size() - 1;
+        nth_element(__indices.begin(), __indices.begin() + __kth, __indices.end(), __comp);
+
+        auto ret = *(__indices.begin() + __kth);
+
+        if(ret == NULL)
+        {
+            cout << "ret is NULL" << endl;
+            exit(-1);
+        }
+
+        return ret;
+    }
+
     /**
      * @brief 函数会对flows_vec按照flow从小到大排序
      *
-     * @param quantile 百分位数对应索引值
+     * @param quantile 百分位数
      * @param [in|out] flows_vec 会对flows_vec的值进行部分排序，只是为了拿到规定的quantile的值
      * @param [out] flows_vec_quantile_vec 只记录第quantile百分位数的的SERVER_FLOW，根据flow从小到大排序
      * @param [out] flows_vec_quantile_vec_idx 按照site_id进行索引的第quantile的流量值
      */
-    void get_server_flow_vec_by_quantile(const int quantile,
+    void get_server_flow_vec_by_quantile(const double quantile,
                                          vector<vector<SERVER_FLOW *>> &flows_vec,
                                          vector<SERVER_FLOW *> &flows_vec_quantile,
                                          vector<int> &flows_vec_quantile_according_site_id)
     {
+        int quantile_idx = calculate_quantile_index(quantile, flows_vec[0].size());
         auto compare_func = [](SERVER_FLOW *a, SERVER_FLOW *b)
         {
             return a->flow < b->flow;
@@ -29,69 +81,19 @@ namespace optimize
 
             auto task = [&](int idx)
             {
-                //*
                 std::nth_element(flows_vec[idx].begin(),
-                                 flows_vec[idx].begin() + quantile,
+                                 flows_vec[idx].begin() + quantile_idx,
                                  flows_vec[idx].end(),
                                  compare_func);
-                //*/
-
-                /*
-                std::sort(flows_vec[idx].begin(), flows_vec[idx].end(), [](const SERVER_FLOW *a, const SERVER_FLOW *b)
-                {
-                    return a->flow < b->flow;
-                });
-                //*/
-                flows_vec_quantile[idx] = (flows_vec[idx][quantile]);
+                flows_vec_quantile[idx] = (flows_vec[idx][quantile_idx]);
+                // flows_vec_quantile[idx] = rough_nth_element(quantile, flows_vec[idx], compare_func);
             };
 
-            //测试发现，在大样本下，并行提升速度明显，小样本下速度略有下降
-            /*
-            for (int i = 0; i < flows_vec.size(); i++)
+            auto rets = parallel_for(0, flows_vec.size(), task);
+            for (auto &ret : rets)
             {
-                task(i);
+                ret.get();
             }
-            //*/
-
-            //*
-            int n = g_thread_pool.idlCount();
-            if (n == 0 || flows_vec.size() * flows_vec[0].size() < 10 * 800)
-            // if (n == 0)
-            {
-                for (int i = 0; i < flows_vec.size(); i++)
-                {
-                    task(i);
-                }
-            }
-            else
-            {
-                const int step = flows_vec.size() / (n + 1) + 1; // n+1是因为当前线程也可以处理
-                vector<std::future<bool>> rets_vec;
-                {
-                    int left = 0;
-                    for (; left < flows_vec.size() && n; left += step, --n)
-                    {
-                        rets_vec.push_back(g_thread_pool.commit(
-                            [&, left]() -> bool
-                            {
-                                for (int i = left; i < left + step && i < flows_vec.size(); i++)
-                                {
-                                    task(i);
-                                }
-                                return true;
-                            }));
-                    }
-                    for (; left < flows_vec.size(); left++)
-                    {
-                        task(left);
-                    }
-                }
-                for (auto &ret : rets_vec)
-                {
-                    ret.get();
-                }
-            }
-            //*/
         }
 
         {

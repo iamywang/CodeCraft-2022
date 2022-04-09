@@ -59,8 +59,6 @@ namespace optimize
                       const int num_iteration)
         {
 
-            const int max_95_percent_index = calculate_quantile_index(0.95, this->m_idx_global_demand.size());
-
             Dispather dispahter(
                 // this->m_demand,
                 this->m_idx_global_demand,
@@ -81,24 +79,24 @@ namespace optimize
                     break;
                 }
 
-                if (dispahter.dispath(max_95_percent_index))
+                if (dispahter.dispath())
                 {
                     // std::cout << "进行了重分配" << std::endl;
                 }
                 else
                 {
-                    int last_quantile_index = max_95_percent_index;
+                    // int last_quantile_index = max_95_percent_index;
                     bool flag = false;
                     //更新一遍后5%的分位流量
                     for (int i = 96; i <= 100; i++)
                     {
-                        int quantile_index = calculate_quantile_index(double(i) / 100.0, this->m_idx_global_demand.size());
-                        if (quantile_index == last_quantile_index)
-                        {
-                            continue;
-                        }
-                        last_quantile_index = quantile_index;
-                        bool flag_tmp = dispahter.dispath2(quantile_index);
+                        // int quantile_index = calculate_quantile_index(double(i) / 100.0, this->m_idx_global_demand.size());
+                        // if (quantile_index == last_quantile_index)
+                        // {
+                        //     continue;
+                        // }
+                        // last_quantile_index = quantile_index;
+                        bool flag_tmp = dispahter.dispath2(double(i) / 100.0);
                         flag = flag || flag_tmp;
                     }
                     if (flag)
@@ -116,7 +114,7 @@ namespace optimize
                     int idx = calculate_quantile_index(0.95, this->m_idx_global_demand.size());
 
                     vector<SERVER_FLOW *> flows_vec_quantile2;
-                    get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_idx_global_demand.size()),
+                    get_server_flow_vec_by_quantile(0.95,
                                                     flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
                 }
                 int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);

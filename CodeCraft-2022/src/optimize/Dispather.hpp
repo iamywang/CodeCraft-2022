@@ -30,18 +30,17 @@ namespace optimize
 
     public:
         Dispather(
-                //   const DEMAND &demand,
-                  const std::vector<int> &idx_global_demand,
-                  vector<vector<SERVER_FLOW>> &flows_vec_poll_,
-                  vector<vector<SERVER_FLOW *>> &flows_vec_,
-                  const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_site_id_vec_,
-                  vector<ANSWER> &X_results_) : 
-                                                // m_demand(demand),
-                                                m_idx_global_demand(idx_global_demand),
-                                                m_flows_vec_poll(flows_vec_poll_),
-                                                m_flows_vec(flows_vec_),
-                                                m_server_supported_flow_2_site_id_vec(server_supported_flow_2_site_id_vec_),
-                                                m_X_results(X_results_)
+            //   const DEMAND &demand,
+            const std::vector<int> &idx_global_demand,
+            vector<vector<SERVER_FLOW>> &flows_vec_poll_,
+            vector<vector<SERVER_FLOW *>> &flows_vec_,
+            const vector<vector<SERVER_SUPPORTED_FLOW>> &server_supported_flow_2_site_id_vec_,
+            vector<ANSWER> &X_results_) : // m_demand(demand),
+                                          m_idx_global_demand(idx_global_demand),
+                                          m_flows_vec_poll(flows_vec_poll_),
+                                          m_flows_vec(flows_vec_),
+                                          m_server_supported_flow_2_site_id_vec(server_supported_flow_2_site_id_vec_),
+                                          m_X_results(X_results_)
         {
         }
         ~Dispather() {}
@@ -140,7 +139,7 @@ namespace optimize
          * @return true
          * @return false
          */
-        bool dispath2(const int quantile)
+        bool dispath2(const double quantile)
         {
             bool ret = false;
 
@@ -158,8 +157,10 @@ namespace optimize
                 else
                 {
                     vector<SERVER_FLOW *> flows_vec_quantile2;
-                    get_server_flow_vec_by_quantile(calculate_quantile_index(0.95, this->m_idx_global_demand.size()),
-                                                    m_flows_vec, flows_vec_quantile2, flows_vec_95_according_site_id);
+                    get_server_flow_vec_by_quantile(0.95,
+                                                    m_flows_vec,
+                                                    flows_vec_quantile2,
+                                                    flows_vec_95_according_site_id);
                 }
             }
 
@@ -167,18 +168,6 @@ namespace optimize
                 // int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
                 // printf("%d\n", sum);
             }
-
-#ifdef SET_LOW_LIMIT
-            vector<int> flows_vec_low_limit_according_site_id;
-
-            {
-                vector<SERVER_FLOW> tmp;
-                get_server_flow_vec_by_quantile(calculate_quantile_index(0.8, this->m_idx_global_demand.size()),
-                                                m_flows_vec,
-                                                tmp,
-                                                flows_vec_low_limit_according_site_id);
-            }
-#endif
 
             for (int id_min_quantile = 0; id_min_quantile < flows_vec_quantile.size(); id_min_quantile++)
             // for (int id_min_quantile = flows_vec_quantile.size() - 1; id_min_quantile >= 0; id_min_quantile--)//无法进行优化
@@ -193,13 +182,13 @@ namespace optimize
             return ret;
         }
 
-        bool dispath(const int max_95_percent_index)
+        bool dispath()
         {
             bool ret = false;
 
             vector<SERVER_FLOW *> flows_vec_95_percent;
             vector<int> flows_vec_95_according_site_id;
-            get_server_flow_vec_by_quantile(max_95_percent_index,
+            get_server_flow_vec_by_quantile(0.95,
                                             m_flows_vec,
                                             flows_vec_95_percent,
                                             flows_vec_95_according_site_id);
@@ -211,18 +200,27 @@ namespace optimize
 #endif
             }
 
-            for (int id_max_95 = flows_vec_95_percent.size() - 1; id_max_95 >= 0; id_max_95--)
+            // for (int i = 0; i < 1; ++i)
             {
-                //*
-                SERVER_FLOW &max_95_server_flow = *flows_vec_95_percent[id_max_95];
-                ANSWER &X = m_X_results[max_95_server_flow.ans_id];
-                const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[max_95_server_flow.ans_id];
+                bool flag = false;
+                for (int id_max_95 = flows_vec_95_percent.size() - 1; id_max_95 >= 0; id_max_95--)
+                {
+                    //*
+                    SERVER_FLOW &max_95_server_flow = *flows_vec_95_percent[id_max_95];
+                    ANSWER &X = m_X_results[max_95_server_flow.ans_id];
+                    const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[max_95_server_flow.ans_id];
 
-                ret = update_X(X,
-                               flows_vec_95_according_site_id,
-                               // flows_vec_low_limit_according_site_id,
-                               server_supported_flow,
-                               max_95_server_flow);
+                    ret = update_X(X,
+                                          flows_vec_95_according_site_id,
+                                          // flows_vec_low_limit_according_site_id,
+                                          server_supported_flow,
+                                          max_95_server_flow);
+                }
+                if (!flag)
+                {
+                    // break;
+                }
+                ret = ret || flag;
             }
 
             return ret;
