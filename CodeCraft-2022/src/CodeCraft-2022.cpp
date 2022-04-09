@@ -113,6 +113,56 @@ int main()
     write_result(*heuristic_algorithm.m_best_X_results);
 #else
     {
+        std::vector<vector<ANSWER>> X_results_vec(NUM_THREAD);
+
+        {
+            const int step = X_results.size() / NUM_THREAD + 1;
+            int left = 0;
+            for (; left < X_results.size(); left += step)
+            {
+                int right = left + step;
+                if(right > X_results.size())
+                    right = X_results.size();
+                auto &vec = X_results_vec[left / step];
+                for (int i = left; i < right; i++)
+                {
+                    vec.push_back(std::move(X_results[i]));
+                }
+            }
+
+            auto &vec = X_results_vec[3];
+            while (left < X_results.size())
+            {
+                vec.push_back(std::move(X_results[left++]));
+            }
+        }
+
+        auto task = [&X_results_vec](const int i)
+        {
+            auto X_results = X_results_vec[i];
+            std::vector<int> idx_global_demand;
+            for (auto &X : X_results)
+            {
+                idx_global_demand.push_back(X.idx_global_mtime);
+            }
+            solve::Solver solver(&X_results, std::move(idx_global_demand));
+            solver.solve_stream(2000);
+        };
+
+        auto rets = parallel_for(0, NUM_THREAD, task);
+        for (auto &ret : rets)
+        {
+            ret.get();
+        }
+
+        X_results.resize(0);
+        for (int i = 0; i < NUM_THREAD; i++)
+        {
+            for (auto &X : X_results_vec[i])
+            {
+                X_results.push_back(std::move(X));
+            }
+        }
         std::vector<int> idx_global_demand;
         for (auto &X : X_results)
         {

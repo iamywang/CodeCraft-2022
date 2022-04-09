@@ -184,8 +184,9 @@ namespace stream_optimize
                     double match_percent = 0;
                     int match_demand = 0;
 
+                    const int size_of_stream2server_id = X.stream2server_id.size();
                     // 挑选占added比例最大的带宽需求进行调整
-                    for (int stream_id = 0; stream_id < X.stream2server_id.size(); stream_id++)
+                    for (int stream_id = 0; stream_id < size_of_stream2server_id; stream_id++)
                     {
                         for (int client_id = 0; client_id < g_num_client; client_id++)
                         {
@@ -200,7 +201,7 @@ namespace stream_optimize
                                 const int current_demand = global::g_demand.stream_client_demand[X.idx_global_mtime].stream_2_client_demand[stream_id][client_id];
                                 if (current_demand <= added)
                                 {
-                                    if (match_demand == 0 || match_percent < (double)current_demand / added)
+                                    if (match_percent < (double)current_demand / added)
                                     {
                                         most_match_stream_id = stream_id;
                                         most_match_client_id = client_id;
