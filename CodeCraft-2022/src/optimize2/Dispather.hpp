@@ -292,14 +292,14 @@ namespace optimize2
 
             {
 #ifdef TEST
-                double price_sum(0);
-                for (const auto &item : cost_vec_95_percent)
-                {
-                    price_sum += *item->cost;
-                }
-                printf("price_sum: %f\n", price_sum);
-                int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
-                printf("flows: %d\n", sum);
+                // double price_sum(0);
+                // for (const auto &item : cost_vec_95_percent)
+                // {
+                //     price_sum += *item->cost;
+                // }
+                // printf("price_sum: %f\n", price_sum);
+                // int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
+                // printf("flows: %d\n", sum);
 #endif
             }
 

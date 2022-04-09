@@ -50,7 +50,8 @@ namespace stream_optimize
                                  const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
                                  const ANSWER &X,
                                  const SERVER_FLOW &quantile_server_flow,
-                                 const int id_server_to_add)
+                                 const int id_server_to_add,
+                                 const double factor)
         {
             int added = 0;
             if (X.sum_flow_site[id_server_to_add] > flows_vec_95_according_site_id[id_server_to_add]) //当前节点的流量大于95%分位，那么可以肆无忌惮地增加
@@ -60,7 +61,7 @@ namespace stream_optimize
             else //否则不能超过95%分位的限制
             {
                 added = std::min(server_supported_flow[id_server_to_add].max_flow,
-                                 int(flows_vec_95_according_site_id[id_server_to_add] * 0.4)) -
+                                 int(flows_vec_95_according_site_id[id_server_to_add] * factor)) -
                         X.sum_flow_site[id_server_to_add];
             }
 
@@ -71,7 +72,8 @@ namespace stream_optimize
         bool update_X(ANSWER &X,
                       const vector<int> &flows_vec_95_according_site_id,
                       const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
-                      const SERVER_FLOW &quantile_server_flow)
+                      const SERVER_FLOW &quantile_server_flow,
+                      const double factor)
         {
             bool ret = false;
 
@@ -162,13 +164,15 @@ namespace stream_optimize
                                                                    server_supported_flow,
                                                                    X,
                                                                    quantile_server_flow,
-                                                                   server_id));
+                                                                   server_id,
+                                                                   factor));
 #else
                 added = this->adjust_flow_up_limit(flows_vec_95_according_site_id,
                                                    server_supported_flow,
                                                    X,
                                                    quantile_server_flow,
-                                                   server_id);
+                                                   server_id,
+                                                   factor);
 #endif
 #undef USE_MATH_ANSLYSE
 
@@ -214,7 +218,7 @@ namespace stream_optimize
                         added = 0;
                         break;
                     }
-                    
+
                     // 可以分配流量，调整分配方案
                     else
                     {
@@ -300,7 +304,11 @@ namespace stream_optimize
                 ANSWER &X = m_X_results[min_quantile_server_flow.ans_id];
                 const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[min_quantile_server_flow.ans_id];
 
-                ret = update_X(X, flows_vec_95_according_site_id, server_supported_flow, min_quantile_server_flow);
+                ret |= update_X(X,
+                                flows_vec_95_according_site_id,
+                                server_supported_flow,
+                                min_quantile_server_flow,
+                                0.4);
             }
             return ret;
         }
@@ -317,7 +325,7 @@ namespace stream_optimize
                                             flows_vec_95_according_site_id);
 
             {
-#ifdef TEST
+// #ifdef TEST //TODO
                 double price_sum(0);
                 for (const auto &item : cost_vec_95_percent)
                 {
@@ -326,7 +334,7 @@ namespace stream_optimize
                 printf("price_sum: %f\n", price_sum);
                 int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
                 printf("flows: %d\n", sum);
-#endif
+// #endif
             }
 
             for (int id_max_95 = cost_vec_95_percent.size() - 1; id_max_95 >= 0; id_max_95--)
@@ -340,10 +348,11 @@ namespace stream_optimize
                                flows_vec_95_according_site_id,
                                // flows_vec_low_limit_according_site_id,
                                server_supported_flow,
-                               max_95_server_flow);
+                               max_95_server_flow,
+                               0.8);
             }
 
-            return ret;
+            return false;
         }
     };
 

@@ -12,6 +12,7 @@
 #include "DivideConquer.hpp"
 
 #define MULTI_THREAD
+// #define HEURISTIC_ALGORITHM
 
 extern void write_result(const std::vector<ANSWER> &X_results);
 
@@ -89,7 +90,10 @@ int main()
                 X_results.push_back(std::move(X));
             }
         }
-        DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 1000, false, X_results);
+#ifndef HEURISTIC_ALGORITHM
+        DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 3000, false, X_results);
+        printf("%s %d: before stream dispath, best price is %d\n", __func__, __LINE__, Verifier::calculate_price(X_results));
+#endif
     }
     //*/
 #else
@@ -102,22 +106,25 @@ int main()
     generate::allocate_flow_to_stream(X_results);
 
     // printf("best price is %d\n", Verifier::calculate_price(X_results));
-
+#ifdef HEURISTIC_ALGORITHM
     heuristic::HeuristicAlgorithm heuristic_algorithm(X_results);
     heuristic_algorithm.optimize();
 
     write_result(*heuristic_algorithm.m_best_X_results);
+#else
+    {
+        std::vector<int> idx_global_demand;
+        for (auto &X : X_results)
+        {
+            idx_global_demand.push_back(X.idx_global_mtime);
+        }
+        solve::Solver solver(&X_results, std::move(idx_global_demand));
+        solver.solve_stream(10000);
+    }
 
-    // std::vector<int> idx_global_demand;
-    // for (auto &X : X_results)
-    // {
-    //     idx_global_demand.push_back(X.idx_global_mtime);
-    // }
-    // solve::Solver solver(X_results, std::move(idx_global_demand));
-    // solver.solve_stream(10000);
-
-    // write_result(X_results);
-    // printf("best price is %d\n", Verifier::calculate_price(X_results));
+    write_result(X_results);
+    printf("%s %d, best price is %d\n", __func__, __LINE__, Verifier::calculate_price(X_results));
+#endif
 
     printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);
 

@@ -19,5 +19,6 @@ target("CodeCraft-2021")
     if(is_mode("debug")) then
         add_defines("TEST")
     else
+        -- add_defines("TEST")
         set_optimize("fastest")
     end

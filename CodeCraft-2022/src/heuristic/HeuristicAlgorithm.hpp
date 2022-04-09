@@ -55,7 +55,7 @@ namespace heuristic
             {
                 // DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 10, false, *m_X_results);
                 m_solver->reset(m_X_results.get());
-                m_solver->solve(500, false);
+                m_solver->solve(1000, false);
                 // DivideConquer::divide_conquer<false>(0, global::g_demand.client_demand.size() - 1, *m_X_results);
 
                 {
@@ -79,7 +79,7 @@ namespace heuristic
                 }
 
                 generate::allocate_flow_to_stream(*m_X_results);
-                m_solver->solve_stream(50);
+                m_solver->solve_stream(300);
 
                 {
 #ifdef TEST
@@ -193,7 +193,7 @@ namespace heuristic
             best_data.p_X_results = std::make_shared<std::vector<ANSWER>>();
             best_data.p_X_results->resize(this->m_X_results->size());
 
-            double T = 200, alpha = 0.999;
+            double T = 200, alpha = 0.99;
 
             while (m_is_running.load())
             {
@@ -306,6 +306,7 @@ namespace heuristic
             m_best_X_results = best_data.p_X_results;
             printf("%s: the last best price is %d\n", __func__, best_data.total_price);
             m_is_running.store(false);
+            return;
         }
     };
 

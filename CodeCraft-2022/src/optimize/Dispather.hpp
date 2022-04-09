@@ -49,7 +49,8 @@ namespace optimize
         bool update_X(ANSWER &X,
                       const vector<int> &flows_vec_95_according_site_id,
                       const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow,
-                      const SERVER_FLOW &quantile_server_flow)
+                      const SERVER_FLOW &quantile_server_flow,
+                      const double factor)
         {
             bool ret = false;
 
@@ -74,7 +75,7 @@ namespace optimize
                 else //否则不能超过95%分位的限制
                 {
                     added = std::min(server_supported_flow[server_id].max_flow,
-                                     int(flows_vec_95_according_site_id[server_id] * 0.3)) -
+                                     int(flows_vec_95_according_site_id[server_id] * factor)) -
                             X.sum_flow_site[server_id];
                 }
 
@@ -177,14 +178,23 @@ namespace optimize
                 ANSWER &X = m_X_results[min_quantile_server_flow.ans_id];
                 const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[min_quantile_server_flow.ans_id];
 
-                ret = update_X(X, flows_vec_95_according_site_id, server_supported_flow, min_quantile_server_flow);
+                ret |= update_X(X,
+                                flows_vec_95_according_site_id,
+                                server_supported_flow,
+                                min_quantile_server_flow,
+                                0.7);
             }
+            // if(ret == true)
+            // {
+            //     throw runtime_error("ret == true");
+            //     cout << __func__ << ": ret = true" << endl;
+            //     exit(-1);
+            // }
             return ret;
         }
 
         bool dispath()
         {
-            bool ret = false;
 
             vector<SERVER_FLOW *> flows_vec_95_percent;
             vector<int> flows_vec_95_according_site_id;
@@ -194,15 +204,15 @@ namespace optimize
                                             flows_vec_95_according_site_id);
 
             {
-#ifdef TEST
-                // int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
-                // printf("%d\n", sum);
-#endif
+                // #ifdef TEST //TODO
+                int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
+                printf("%d\n", sum);
+                // #endif
             }
 
+            bool ret = false;
             // for (int i = 0; i < 1; ++i)
             {
-                bool flag = false;
                 for (int id_max_95 = flows_vec_95_percent.size() - 1; id_max_95 >= 0; id_max_95--)
                 {
                     //*
@@ -211,19 +221,22 @@ namespace optimize
                     const std::vector<SERVER_SUPPORTED_FLOW> &server_supported_flow = m_server_supported_flow_2_site_id_vec[max_95_server_flow.ans_id];
 
                     ret = update_X(X,
-                                          flows_vec_95_according_site_id,
-                                          // flows_vec_low_limit_according_site_id,
-                                          server_supported_flow,
-                                          max_95_server_flow);
+                                   flows_vec_95_according_site_id,
+                                   // flows_vec_low_limit_according_site_id,
+                                   server_supported_flow,
+                                   max_95_server_flow,
+                                   0.85);
                 }
-                if (!flag)
-                {
-                    // break;
-                }
-                ret = ret || flag;
             }
 
-            return ret;
+            // if(ret == true)
+            // {
+            //     throw runtime_error("ret == true");
+            //     cout << __func__ << ": ret = true" << endl;
+            //     exit(-1);
+            // }
+
+            return false;
         }
     };
 
