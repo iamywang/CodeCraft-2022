@@ -195,8 +195,8 @@ namespace optimize
 
             {
 #ifdef TEST
-                int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
-                printf("%d\n", sum);
+                // int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
+                // printf("%d\n", sum);
 #endif
             }
 

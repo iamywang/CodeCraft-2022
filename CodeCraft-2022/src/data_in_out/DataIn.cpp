@@ -8,7 +8,13 @@
 using namespace global;
 
 // const static std::string base_path("/data/data_1/");
+#ifdef __linux__
 const static std::string base_path("/data/");
+// const static std::string split_str("\r\n");
+#else
+const static std::string base_path("C:\\Users\\wangzhankun\\Desktop\\huawei\\fusai\\data\\");
+// const static std::string split_str("\n");
+#endif
 
 const static char *file_names[] = {
     "config.ini",
@@ -25,7 +31,7 @@ void read_configure(int &qos_constraint, int &minimum_cost)
 
     std::string file_content;
     MyUtils::Tools::readAll(base_path + file_names[0], file_content);
-    auto lines = MyUtils::Tools::split(file_content, "\r\n");
+    auto lines = MyUtils::Tools::split(file_content, split_str);
     {
         auto tmp = MyUtils::Tools::split(lines[1], "=");
         qos_constraint = std::stoi(tmp[1]);

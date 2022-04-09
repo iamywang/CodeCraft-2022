@@ -1,6 +1,13 @@
+#pragma once
+
 #include <cstdio>
 #include "../utils/tools.hpp"
 
+#ifdef __linux__
+const static std::string split_str(split_str);
+#else
+const static std::string split_str("\n");
+#endif
 
 class CSV
 {
@@ -14,7 +21,7 @@ public:
         {
             printf("%s\n", strerror(errno));
         }
-        std::vector<std::string> lines = MyUtils::Tools::split(s, "\r\n");
+        std::vector<std::string> lines = MyUtils::Tools::split(s, split_str);
 
         m_header = MyUtils::Tools::split(lines[0], ",");
 
@@ -35,7 +42,7 @@ public:
             s += *p + ",";
         }
         s.pop_back();
-        s += "\r\n";
+        s += split_str;
 
         ofs << s;
 
@@ -47,7 +54,7 @@ public:
                 s += *q + ",";
             }
             s.pop_back();
-            s += "\r\n";
+            s += split_str;
         }
 
         ofs.flush();
