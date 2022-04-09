@@ -4,6 +4,7 @@
 #include <functional>
 #include <numeric>
 #include <algorithm>
+#include <random>
 #include "../utils/tools.hpp"
 #include "../utils/Verifier.hpp"
 #include "../utils/Graph/MaxFlow.hpp"
@@ -264,14 +265,23 @@ namespace generate
         if (isMutate)
         {
             int num_mutate = int(rate * X_results.size());
-            std::vector<int> mutate_time_index;
-            for (int i = 0; i < X_results.size(); i++)
+            static std::vector<int> s_mutax_time_index;
+            if(s_mutax_time_index.size() < X_results.size())
             {
-                mutate_time_index.push_back(i);
+                for(int i = s_mutax_time_index.size(); i < X_results.size(); i++)
+                {
+                    s_mutax_time_index.push_back(i);
+                }
             }
-            srand((unsigned)time(NULL));
-            random_shuffle(mutate_time_index.begin(), mutate_time_index.end());
-            mutate_time_index.resize(num_mutate);
+            std::vector<int> mutate_time_index = s_mutax_time_index;
+            // for (int i = 0; i < X_results.size(); i++)
+            // {
+            //     mutate_time_index.push_back(i);
+            // }
+            unsigned seed = chrono::system_clock::now().time_since_epoch().count();
+            shuffle(mutate_time_index.begin(), mutate_time_index.end(), default_random_engine(seed));
+            // random_shuffle(mutate_time_index.begin(), mutate_time_index.end());
+            // mutate_time_index.resize(num_mutate);
 
             auto task = [&](const int x_time)
             {
@@ -284,7 +294,7 @@ namespace generate
                     {
                         const int stream_client_demand = global::g_demand.stream_client_demand[mutate_time_index[x_time]].stream_2_client_demand[stream_id][client_id];
                         const int site_id = X.stream2server_id[stream_id][client_id];
-                        
+
                         if (stream_client_demand == 0 || site_id == -1)
                         {
                             continue;
@@ -295,7 +305,7 @@ namespace generate
                         {
                             srand(time(NULL));
                             int rand_site_id = rand() % g_num_server;
-                            
+
                             if (g_qos.qos[rand_site_id][client_id] == 0 || rand_site_id == site_id)
                             {
                                 continue;
@@ -319,7 +329,7 @@ namespace generate
                 }
             };
 
-            auto vec = parallel_for(0, mutate_time_index.size(), task);
+            auto vec = parallel_for(0, num_mutate, task);
             for (auto &ret : vec)
             {
                 ret.get();

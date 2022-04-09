@@ -61,20 +61,20 @@ namespace heuristic
                 {
 #ifndef COMPETITION
 
-                    // #ifdef TEST
+#ifdef TEST
                     if (Verifier::verify(*m_X_results))
-                    // #endif
+#endif
                     {
                         int price = Verifier::calculate_price(*m_X_results);
                         printf("%s: before stream dispath verify:total price is %d\n", __func__, price);
                     }
-                    // #ifdef TEST
+#ifdef TEST
                     else
                     {
                         printf("%s: solve failed\n", __func__);
                         exit(-1);
                     }
-// #endif
+#endif
 #endif
                 }
 
@@ -87,16 +87,16 @@ namespace heuristic
 #endif
                     {
                         SP_VEC_ANSWER p;
-                        if (this->m_X_results_before_dispath_stack.size() > 0)
+                        // if (this->m_X_results_before_dispath_stack.size() > 0)
                         {
                             //因为后续可以从 stack 中取出来，所以不需要拷贝
                             p = m_X_results;
                         }
-                        else
-                        {
-                            p = std::make_shared<std::vector<ANSWER>>();
-                            *p = *m_X_results;
-                        }
+                        // else
+                        // {
+                        //     p = std::make_shared<std::vector<ANSWER>>();
+                        //     *p = *m_X_results;
+                        // }
                         m_X_results_after_dispath_queue.put(p);
                     }
 #ifdef TEST
@@ -209,8 +209,12 @@ namespace heuristic
                 }
                 {
                     data[0].total_price = HeuristicAlgorithm::calculate_price(*data[0].p_X_results, data[0].quantile_95_costs);
+
+#ifndef COMPETITION
+
                     cout << "data[0].total_price = " << data[0].total_price << endl;
                     cout << "data[1].total_price = " << data[1].total_price << endl;
+#endif
 
                     {
                         double delta = data[1].total_price - data[0].total_price; //会出现delta<0的情况
@@ -218,7 +222,7 @@ namespace heuristic
                         double p = 0;
                         if (delta < 0)
                         {
-                            p = exp(delta / data[1].total_price * 5);
+                            p = exp(5 * delta / data[1].total_price);
                         }
                         else
                             p = exp(-T / delta);
@@ -275,13 +279,15 @@ namespace heuristic
                         }
 
                         T *= alpha;
-
+#ifndef COMPETITION
                         cout << "delta = " << delta << endl;
                         cout << "T = " << T << endl;
                         cout << "p = " << p << endl;
+#endif
                     }
-
+#ifndef COMPETITION
                     std::cout << "******" << __func__ << " " << __LINE__ << ": best_data.total_price is " << best_data.total_price << std::endl;
+#endif
                 }
             }
 
