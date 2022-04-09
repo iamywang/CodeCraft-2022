@@ -5,6 +5,7 @@ if(is_plat("linux")) then
 else
     -- windows
     add_defines("NOMINMAX")
+    add_cflags("/wd 4819")
 end
 
 

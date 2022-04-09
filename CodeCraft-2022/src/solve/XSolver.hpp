@@ -1,6 +1,6 @@
 #pragma once
 #include "ResultGenerator.hpp"
-#include "../utils/Graph/MaxFlow.hpp"
+// #include "../utils/Graph/MaxFlow.hpp"
 namespace solve
 {
     class XSolverGreedyAlgorithm : ResultGenerator
@@ -160,109 +160,109 @@ namespace solve
         }
     };
 
-    class XSolverMaxFlow : ResultGenerator
-    {
-    private:
-    public:
-        XSolverMaxFlow(CommonDataForResultGenrator &common_data) : ResultGenerator(common_data) {}
-        ~XSolverMaxFlow() {}
-        void generate_initial_X_results()
-        {
-            // m_X_results.resize(m_demand.mtime.size());
-            m_X_results.resize(m_idx_global_demand.size());
+    // class XSolverMaxFlow : ResultGenerator
+    // {
+    // private:
+    // public:
+    //     XSolverMaxFlow(CommonDataForResultGenrator &common_data) : ResultGenerator(common_data) {}
+    //     ~XSolverMaxFlow() {}
+    //     void generate_initial_X_results()
+    //     {
+    //         // m_X_results.resize(m_demand.mtime.size());
+    //         m_X_results.resize(m_idx_global_demand.size());
 
-            // 求解每一时刻的X
-            for (int index = 0; index < m_idx_global_demand.size(); index++)
-            {
-                const string &mtime = global::g_demand.mtime[m_idx_global_demand[index]];
+    //         // 求解每一时刻的X
+    //         for (int index = 0; index < m_idx_global_demand.size(); index++)
+    //         {
+    //             const string &mtime = global::g_demand.mtime[m_idx_global_demand[index]];
 
-                //取出对应时刻的demand
-                vector<int> &demand_at_mtime = global::g_demand.client_demand[m_idx_global_demand[index]];
+    //             //取出对应时刻的demand
+    //             vector<int> &demand_at_mtime = global::g_demand.client_demand[m_idx_global_demand[index]];
 
-                ANSWER &ans = m_X_results[index];
-                ans.idx_global_mtime = global::g_demand.get_global_index(mtime);
-                solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, ans);
-            }
-            return;
-        }
+    //             ANSWER &ans = m_X_results[index];
+    //             ans.idx_global_mtime = global::g_demand.get_global_index(mtime);
+    //             solve_X(demand_at_mtime, g_site_bandwidth.bandwidth, g_qos.qos, ans);
+    //         }
+    //         return;
+    //     }
 
-        /**
-         * @brief 使用最大流算法计算初始解
-         *
-         * @param [in] demand
-         * @param [in] bandwidth
-         * @param [in] QOS
-         * @param [out] ans
-         */
-        static void solve_X(const vector<int> &demand,
-                            const vector<int> &bandwidth,
-                            const vector<vector<int>> &QOS,
-                            ANSWER &ans //行代表客户，列表示边缘节点
-        )
-        {
-            const int num_vertexes = g_qos.site_name.size() + g_qos.client_name.size() + 2;
-            const int id_vertex_src = 0, id_vertex_dst = num_vertexes - 1;
-            const int id_base_vertex_site = g_qos.client_name.size() + 1;
+    //     /**
+    //      * @brief 使用最大流算法计算初始解
+    //      *
+    //      * @param [in] demand
+    //      * @param [in] bandwidth
+    //      * @param [in] QOS
+    //      * @param [out] ans
+    //      */
+    //     static void solve_X(const vector<int> &demand,
+    //                         const vector<int> &bandwidth,
+    //                         const vector<vector<int>> &QOS,
+    //                         ANSWER &ans //行代表客户，列表示边缘节点
+    //     )
+    //     {
+    //         const int num_vertexes = g_qos.site_name.size() + g_qos.client_name.size() + 2;
+    //         const int id_vertex_src = 0, id_vertex_dst = num_vertexes - 1;
+    //         const int id_base_vertex_site = g_qos.client_name.size() + 1;
 
-            Graph::Algorithm::MaxFlowGraph graph;
-            graph.initGraph(num_vertexes);
-            for (int client_id = 0; client_id < g_qos.client_name.size(); client_id++)
-            {
-                const int id_vertex_client = client_id + 1;
+    //         Graph::Algorithm::MaxFlowGraph graph;
+    //         graph.initGraph(num_vertexes);
+    //         for (int client_id = 0; client_id < g_qos.client_name.size(); client_id++)
+    //         {
+    //             const int id_vertex_client = client_id + 1;
 
-                graph.addEdge(id_vertex_src, id_vertex_client, demand[client_id]);
+    //             graph.addEdge(id_vertex_src, id_vertex_client, demand[client_id]);
 
-                for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-                {
-                    if (QOS[site_id][client_id] > 0)
-                    {
-                        graph.addEdge(id_vertex_client, site_id + id_base_vertex_site, g_site_bandwidth.bandwidth[site_id]);
-                    }
-                }
-            }
+    //             for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+    //             {
+    //                 if (QOS[site_id][client_id] > 0)
+    //                 {
+    //                     graph.addEdge(id_vertex_client, site_id + id_base_vertex_site, g_site_bandwidth.bandwidth[site_id]);
+    //                 }
+    //             }
+    //         }
 
-            for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-            {
-                graph.addEdge(site_id + id_base_vertex_site, id_vertex_dst, g_site_bandwidth.bandwidth[site_id]);
-            }
+    //         for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+    //         {
+    //             graph.addEdge(site_id + id_base_vertex_site, id_vertex_dst, g_site_bandwidth.bandwidth[site_id]);
+    //         }
 
-            int max_flow = graph.getMaxFlow(id_vertex_src, id_vertex_dst);
+    //         int max_flow = graph.getMaxFlow(id_vertex_src, id_vertex_dst);
 
-            {
-                auto &edges = graph.getEdges();
-                auto &X = ans.flow;
-                //初始化X
-                X.resize(demand.size());
-                for (int i = 0; i < demand.size(); i++)
-                {
-                    X[i] = vector<int>(g_qos.site_name.size(), 0); //这里必须初始化为0
-                }
-                for (auto &edge : edges)
-                {
-                    if (edge.size() > 0 && edge[0].fromVertex > id_vertex_src && edge[0].toVertex < id_vertex_dst)
-                        for (auto &e : edge)
-                        {
-                            X[e.fromVertex - 1][e.toVertex - id_base_vertex_site] = e.flow;
-                        }
-                }
-            }
-            for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
-            {
-                int tmp = MyUtils::Tools::sum_column(ans.flow, site_id);
-                ans.sum_flow_site.push_back(tmp);
-            }
+    //         {
+    //             auto &edges = graph.getEdges();
+    //             auto &X = ans.flow;
+    //             //初始化X
+    //             X.resize(demand.size());
+    //             for (int i = 0; i < demand.size(); i++)
+    //             {
+    //                 X[i] = vector<int>(g_qos.site_name.size(), 0); //这里必须初始化为0
+    //             }
+    //             for (auto &edge : edges)
+    //             {
+    //                 if (edge.size() > 0 && edge[0].fromVertex > id_vertex_src && edge[0].toVertex < id_vertex_dst)
+    //                     for (auto &e : edge)
+    //                     {
+    //                         X[e.fromVertex - 1][e.toVertex - id_base_vertex_site] = e.flow;
+    //                     }
+    //             }
+    //         }
+    //         for (int site_id = 0; site_id < g_qos.site_name.size(); site_id++)
+    //         {
+    //             int tmp = MyUtils::Tools::sum_column(ans.flow, site_id);
+    //             ans.sum_flow_site.push_back(tmp);
+    //         }
 
-            {
-                // verify
-                //  int sum_dem = std::accumulate(demand.begin(), demand.end(), 0);
-                //  if(sum_dem != max_flow)
-                //  {
-                //      cout << "sum_dem != max_flow, error" << endl;
-                //      exit(-1);
-                //  }
-            }
-            return;
-        }
-    };
+    //         {
+    //             // verify
+    //             //  int sum_dem = std::accumulate(demand.begin(), demand.end(), 0);
+    //             //  if(sum_dem != max_flow)
+    //             //  {
+    //             //      cout << "sum_dem != max_flow, error" << endl;
+    //             //      exit(-1);
+    //             //  }
+    //         }
+    //         return;
+    //     }
+    // };
 
 } // namespace solve
