@@ -55,7 +55,7 @@ namespace heuristic
             {
                 // DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 10, false, *m_X_results);
                 m_solver->reset(m_X_results.get());
-                m_solver->solve(10, false);
+                m_solver->solve(500, false);
                 // DivideConquer::divide_conquer<false>(0, global::g_demand.client_demand.size() - 1, *m_X_results);
 
                 {
@@ -94,7 +94,8 @@ namespace heuristic
                         }
                         else
                         {
-                            p = std::make_shared<std::vector<ANSWER>>(*m_X_results);
+                            p = std::make_shared<std::vector<ANSWER>>();
+                            *p = *m_X_results;
                         }
                         m_X_results_after_dispath_queue.put(p);
                     }
@@ -113,9 +114,13 @@ namespace heuristic
                     break;
                 }
 
-                if (this->m_X_results_before_dispath_stack.size() > 0)
+                // if (this->m_X_results_before_dispath_stack.size() > 0) //注释掉之后，就变成串行执行了
                 {
                     this->m_X_results = this->m_X_results_before_dispath_stack.pop();
+                    while (this->m_X_results_before_dispath_stack.size() > 0)
+                    {
+                        this->m_X_results_before_dispath_stack.pop();
+                    }
                 }
             }
 
@@ -193,49 +198,80 @@ namespace heuristic
             while (m_is_running.load())
             {
                 data[0].p_X_results = m_X_results_after_dispath_queue.pop();
-                // while (m_X_results_after_dispath_queue.size() > 0)
-                // {
-                //     data[0].p_X_results = m_X_results_after_dispath_queue.pop();
-                // }
+                while (m_X_results_after_dispath_queue.size() > 0)
+                {
+                    data[0].p_X_results = m_X_results_after_dispath_queue.pop();
+                }
                 if (data[0].p_X_results.get() == nullptr)
                 {
                     m_is_running.store(false);
                     break;
                 }
                 {
-                    const int id0 = 0, id1 = 1;
-                    data[id0].total_price = HeuristicAlgorithm::calculate_price(*data[id0].p_X_results, data[id0].quantile_95_costs);
-                    cout << "data[0].total_price = " << data[id0].total_price << endl;
+                    data[0].total_price = HeuristicAlgorithm::calculate_price(*data[0].p_X_results, data[0].quantile_95_costs);
+                    cout << "data[0].total_price = " << data[0].total_price << endl;
+                    cout << "data[1].total_price = " << data[1].total_price << endl;
 
                     {
-                        double delta = data[id1].total_price - data[id0].total_price; //会出现delta<0的情况
+                        double delta = data[1].total_price - data[0].total_price; //会出现delta<0的情况
                         //按照概率接受该解
-                        double p = exp(-T / delta);
+                        double p = 0;
                         if (delta < 0)
                         {
-                            p = exp(T / delta);
+                            p = exp(delta / data[1].total_price * 5);
                         }
-                        if (p > (double)rand() / RAND_MAX)
+                        else
+                            p = exp(-T / delta);
+                        if (data[0].total_price < best_data.total_price)
+                        {
+                            p = 1;
+                        }
+                        srand(time(NULL));
+                        if (p > (double)rand() / (double)RAND_MAX)
                         {
                             //接受该解
-                            data[id1].copy(data[id0]);
-                            if (data[id0].total_price < best_data.total_price)
+                            if (data[1].total_price < best_data.total_price) //在data[1]的解被覆盖之前，先保存一下
                             {
-                                best_data.total_price = data[id0].total_price;
-                                *best_data.p_X_results = *data[id0].p_X_results; //需要做一次拷贝
+                                best_data.total_price = data[1].total_price;
+                                best_data.p_X_results.swap(data[1].p_X_results);
                             }
-                            this->m_X_results_before_dispath_stack.put(data[id0].p_X_results);
+                            else if (data[1].p_X_results == best_data.p_X_results)
+                            {
+                                best_data.p_X_results = std::make_shared<std::vector<ANSWER>>();
+                                *best_data.p_X_results = std::move(*data[1].p_X_results);
+                            }
+                            if (data[0].p_X_results.use_count() != 1)
+                            {
+                                // printf("!!!!!data[0].p_X_results.use_count() != 1!!!!!\n");
+                                // m_is_running.store(false);
+                                // break;
+                                auto p = std::make_shared<std::vector<ANSWER>>();
+                                *p = *data[0].p_X_results;
+                                data[0].p_X_results = p;
+                            }
+                            data[1].copy(data[0]);
+                            this->m_X_results_before_dispath_stack.put(data[0].p_X_results);
                         }
                         else
                         {
-                            //放弃当前解
-                            generate::stream_mutation(*data[id1].p_X_results, 0.1, true);
-                            this->m_X_results_before_dispath_stack.put(data[id1].p_X_results);
-                            if (data[id0].total_price < best_data.total_price)
+                            if (data[0].total_price < best_data.total_price)
                             {
-                                best_data.total_price = data[id0].total_price;
-                                best_data.p_X_results = data[id0].p_X_results; //不需要做一次拷贝
+                                best_data.total_price = data[0].total_price;
+                                best_data.p_X_results = data[0].p_X_results; //不需要做一次拷贝
                             }
+                            if (data[1].total_price < best_data.total_price || best_data.p_X_results == data[1].p_X_results)
+                            {
+                                best_data.copy(data[1]);
+                            }
+                            if (data[1].p_X_results.use_count() != 1)
+                            {
+                                auto p = data[1].p_X_results;
+                                data[1].p_X_results = std::make_shared<std::vector<ANSWER>>();
+                                *data[1].p_X_results = *p;
+                            }
+                            //放弃当前解
+                            generate::stream_mutation(*data[1].p_X_results, 0.01, true);
+                            this->m_X_results_before_dispath_stack.put(data[1].p_X_results);
                         }
 
                         T *= alpha;
@@ -248,9 +284,22 @@ namespace heuristic
                     std::cout << "******" << __func__ << " " << __LINE__ << ": best_data.total_price is " << best_data.total_price << std::endl;
                 }
             }
+
+            if (data[0].total_price < best_data.total_price)
+            {
+                best_data.total_price = data[0].total_price;
+                best_data.p_X_results = data[0].p_X_results; //不需要做一次拷贝
+            }
+            if (data[1].total_price < best_data.total_price)
+            {
+                best_data.total_price = data[1].total_price;
+                best_data.p_X_results = data[1].p_X_results; //不需要做一次拷贝
+            }
+
             printf("%s %d: end\n", __func__, __LINE__);
             m_best_X_results = best_data.p_X_results;
             printf("%s: the last best price is %d\n", __func__, best_data.total_price);
+            m_is_running.store(false);
         }
     };
 
