@@ -51,8 +51,7 @@ namespace solve
                                                        g_site_bandwidth.bandwidth[server_id]);
 
                     server_supported_flow.push_back(SERVER_SUPPORTED_FLOW{
-                        global::g_demand.get_global_index(global::g_demand.mtime[idx_global_demand[k]]),
-                        // global::g_demand.mtime[idx_global_demand[k]],
+                        idx_global_demand[k],
                         max_server_support_flow,
                         server_id});
                 }

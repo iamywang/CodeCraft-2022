@@ -194,7 +194,7 @@ typedef struct _ANSWER
      *
      * @return void
      */
-    void set(const int id_stream, const int id_client, const int id_server)
+    inline void set(const int id_stream, const int id_client, const int id_server)
     {
         // const int demand_tmp = global::g_demand.stream_client_demand[idx_global_mtime].stream_2_client_demand[id_stream][id_client];
         // if (stream2server_id[id_stream][id_client] != -1) //如果已经指定了服务器
