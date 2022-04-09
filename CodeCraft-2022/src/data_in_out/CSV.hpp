@@ -4,7 +4,7 @@
 #include "../utils/tools.hpp"
 
 #ifdef __linux__
-const static std::string split_str(split_str);
+const static std::string split_str("\r\n");
 #else
 const static std::string split_str("\n");
 #endif
