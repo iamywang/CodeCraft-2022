@@ -263,13 +263,15 @@ namespace generate
     {
         if (isMutate)
         {
-            int num_mutate = int(rate * global::g_demand.mtime.size());
+            int num_mutate = int(rate * X_results.size());
             std::vector<int> mutate_time_index;
-            srand((unsigned)time(NULL));
-            for (int i = 0; i < num_mutate; i++)
+            for (int i = 0; i < X_results.size(); i++)
             {
-                mutate_time_index.push_back(rand() % global::g_demand.mtime.size());
+                mutate_time_index.push_back(i);
             }
+            srand((unsigned)time(NULL));
+            random_shuffle(mutate_time_index.begin(), mutate_time_index.end());
+            mutate_time_index.resize(num_mutate);
 
             auto task = [&](const int x_time)
             {
@@ -281,7 +283,9 @@ namespace generate
                     for (int stream_id = 0; stream_id < stream_nums; stream_id++)
                     {
                         const int stream_client_demand = global::g_demand.stream_client_demand[mutate_time_index[x_time]].stream_2_client_demand[stream_id][client_id];
-                        if (stream_client_demand == 0)
+                        const int site_id = X.stream2server_id[stream_id][client_id];
+                        
+                        if (stream_client_demand == 0 || site_id == -1)
                         {
                             continue;
                         }
@@ -290,10 +294,9 @@ namespace generate
                         // if (rand() % 1000 < rate * 1000)
                         {
                             srand(time(NULL));
-                            const int site_id = X.stream2server_id[stream_id][client_id];
                             int rand_site_id = rand() % g_num_server;
-
-                            if (g_qos.qos[rand_site_id][client_id] == 0)
+                            
+                            if (g_qos.qos[rand_site_id][client_id] == 0 || rand_site_id == site_id)
                             {
                                 continue;
                             }
