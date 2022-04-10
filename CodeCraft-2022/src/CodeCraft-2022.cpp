@@ -11,8 +11,8 @@
 #include "heuristic/HeuristicAlgorithm.hpp"
 #include "DivideConquer.hpp"
 
-#define MULTI_THREAD
-#define STREAM_OPTIMIZE_DIVIDE
+// #define MULTI_THREAD
+// #define STREAM_OPTIMIZE_DIVIDE
 // #define HEURISTIC_ALGORITHM
 
 extern void write_result(const std::vector<ANSWER> &X_results);
@@ -26,7 +26,7 @@ int main()
     read_demand(global::g_demand); //要求最后读demand
     read_qos(g_qos);
     set_90_quantile_server_id();
-    
+
     {
         cout << "时刻数量: " << global::g_demand.mtime.size() << endl;
         cout << "客户端数量：" << global::g_demand.client_name.size() << endl;
@@ -93,19 +93,31 @@ int main()
             }
         }
 #ifndef HEURISTIC_ALGORITHM
-        DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 3000, false, X_results);
+        DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 100, false, X_results);
+#ifndef COMPETITION
         printf("%s %d: before stream dispath, best price is %d\n", __func__, __LINE__, Verifier::calculate_price(X_results));
+#endif
 #endif
     }
     //*/
 #else
     {
-        // divide_conquer(0, global::g_demand.client_demand.size() - 1, X_results);
-        task(0, global::g_demand.client_demand.size() - 1, 100, true, X_results);
+        // DivideConquer::task(0, global::g_demand.client_demand.size() - 1, 1000, true, X_results);
     }
 #endif
+    // generate::allocate_flow_to_stream(X_results);
 
-    generate::allocate_flow_to_stream(X_results);
+    {
+        std::vector<int> idx_global_demand;
+        for (int i = 0; i < global::g_demand.client_demand.size(); i++)
+        {
+            idx_global_demand.push_back(i);
+        }
+        solve::Solver solver(&X_results,
+                             std::move(idx_global_demand));
+        solver.solve(0, true);
+    }
+
 
     // printf("best price is %d\n", Verifier::calculate_price(X_results));
 #ifdef HEURISTIC_ALGORITHM
@@ -117,62 +129,64 @@ int main()
     {
 
 #ifdef STREAM_OPTIMIZE_DIVIDE
+
         std::vector<vector<ANSWER>> X_results_vec(NUM_THREAD);
-
+        if (MyUtils::Tools::getCurrentMillisecs() - g_start_time < G_TOTAL_DURATION * 1000)
         {
-            const int step = X_results.size() / NUM_THREAD + 1;
-            int left = 0;
-            for (; left < X_results.size(); left += step)
             {
-                int right = left + step;
-                if (right > X_results.size())
-                    right = X_results.size();
-                auto &vec = X_results_vec[left / step];
-                for (int i = left; i < right; i++)
+                const int step = X_results.size() / NUM_THREAD + 1;
+                int left = 0;
+                for (; left < X_results.size(); left += step)
                 {
-                    vec.push_back(std::move(X_results[i]));
+                    int right = left + step;
+                    if (right > X_results.size())
+                        right = X_results.size();
+                    auto &vec = X_results_vec[left / step];
+                    for (int i = left; i < right; i++)
+                    {
+                        vec.push_back(std::move(X_results[i]));
+                    }
+                }
+
+                auto &vec = X_results_vec[3];
+                while (left < X_results.size())
+                {
+                    vec.push_back(std::move(X_results[left++]));
                 }
             }
 
-            auto &vec = X_results_vec[3];
-            while (left < X_results.size())
             {
-                vec.push_back(std::move(X_results[left++]));
-            }
-        }
-
-        {
-            // MyUtils::MyTimer::ProcessTimer timer;
-            auto task = [&X_results_vec](const int i)
-            {
-                auto X_results = X_results_vec[i];
-                std::vector<int> idx_global_demand;
-                for (auto &X : X_results)
+                // MyUtils::MyTimer::ProcessTimer timer;
+                auto task = [&X_results_vec](const int i)
                 {
-                    idx_global_demand.push_back(X.idx_global_mtime);
+                    auto X_results = X_results_vec[i];
+                    std::vector<int> idx_global_demand;
+                    for (auto &X : X_results)
+                    {
+                        idx_global_demand.push_back(X.idx_global_mtime);
+                    }
+                    solve::Solver solver(&X_results, std::move(idx_global_demand));
+                    solver.solve_stream(500);
+                };
+
+                auto rets = parallel_for(0, NUM_THREAD, task);
+                for (auto &ret : rets)
+                {
+                    ret.get();
                 }
-                solve::Solver solver(&X_results, std::move(idx_global_demand));
-                solver.solve_stream(200);
-            };
-
-            auto rets = parallel_for(0, NUM_THREAD, task);
-            for (auto &ret : rets)
-            {
-                ret.get();
+                // printf("%s %d: duration is %dms\n", __func__, __LINE__, timer.duration());
+                // exit(-1);
             }
-            // printf("%s %d: duration is %dms\n", __func__, __LINE__, timer.duration());
-            // exit(-1);
-        }
 
-        X_results.resize(0);
-        for (int i = 0; i < NUM_THREAD; i++)
-        {
-            for (auto &X : X_results_vec[i])
+            X_results.resize(0);
+            for (int i = 0; i < NUM_THREAD; i++)
             {
-                X_results.push_back(std::move(X));
+                for (auto &X : X_results_vec[i])
+                {
+                    X_results.push_back(std::move(X));
+                }
             }
         }
-
 #endif
     }
 
@@ -184,8 +198,15 @@ int main()
     solve::Solver solver(&X_results, std::move(idx_global_demand));
     solver.solve_stream(10000);
 
+#ifdef TEST
+    Verifier::verify(X_results);
+    Verifier::verify_stream(X_results);
+#endif
+
     write_result(X_results);
+#ifndef COMPETITION
     printf("%s %d, best price is %d\n", __func__, __LINE__, Verifier::calculate_price(X_results));
+#endif
 #endif
 
     printf("Total time: %lld ms\n", MyUtils::Tools::getCurrentMillisecs() - g_start_time);

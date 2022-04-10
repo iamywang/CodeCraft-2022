@@ -4,7 +4,7 @@ int g_minimum_cost = 0;
 SITE_BANDWIDTH g_site_bandwidth{};
 QOS g_qos{};
 int64_t g_start_time = 0;
-const int G_TOTAL_DURATION = 280;//秒
+const int G_TOTAL_DURATION = 290;//秒
 DEMAND DEMAND::s_demand{};
 MyUtils::Thread::ThreadPool g_thread_pool(NUM_THREAD);
 std::set<int> g_90_percent_server_id_set;

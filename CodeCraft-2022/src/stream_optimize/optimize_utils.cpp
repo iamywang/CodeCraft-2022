@@ -1,5 +1,6 @@
 #include "optimize_interface.hpp"
 #include "../utils/ProcessTimer.hpp"
+#include "../utils/utils.hpp"
 #include <iostream>
 using namespace std;
 
@@ -19,17 +20,26 @@ namespace stream_optimize
                                          vector<SERVER_FLOW *> &cost_vec_quantile,
                                          vector<int> &flows_vec_quantile_according_site_id)
     {
+        const int quantile_95_idx = calculate_quantile_index(0.95, cost_vec[0].size());
+        // const int quantile_idx = calculate_quantile_index(quantile, flows_vec[0].size());
+        const int quantile_90_idx = calculate_quantile_index(0.9, cost_vec[0].size());
+
         { //提取quantile百分位数的SERVER_FLOW
             cost_vec_quantile.resize(cost_vec.size());
 
-            auto task = [&cost_vec, &cost_vec_quantile, &quantile](int idx)
+            auto task = [&](int idx)
             {
+                int quantile_idx_tmp = quantile;
+                // if (quantile == quantile_95_idx && g_90_percent_server_id_set.find(idx) != g_90_percent_server_id_set.end())
+                // {
+                //     quantile_idx_tmp = quantile_90_idx;
+                // }
                 std::nth_element(cost_vec[idx].begin(),
-                                 cost_vec[idx].begin() + quantile,
+                                 cost_vec[idx].begin() + quantile_idx_tmp,
                                  cost_vec[idx].end(),
                                  [](const SERVER_FLOW *a, const SERVER_FLOW *b)
                                  { return *(a->cost) < *(b->cost); });
-                cost_vec_quantile[idx] = (cost_vec[idx][quantile]);
+                cost_vec_quantile[idx] = (cost_vec[idx][quantile_idx_tmp]);
             };
 
             //测试发现，在大样本下，并行提升速度明显，小样本下速度略有下降

@@ -3,6 +3,8 @@
 // #include "../utils/Graph/MaxFlow.hpp"
 namespace solve
 {
+
+
     class XSolverGreedyAlgorithm : ResultGenerator
     {
     private:
@@ -84,7 +86,6 @@ namespace solve
         {
 
             auto &X = ans.flow;
-
 
             const static int max_5_percent_flow_size = demand.size() - (int)((demand.size() - 1) * 0.95 + 1) + 1;
 
