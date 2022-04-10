@@ -25,7 +25,8 @@ int main()
     read_site_bandwidth(g_site_bandwidth);
     read_demand(global::g_demand); //要求最后读demand
     read_qos(g_qos);
-
+    set_90_quantile_server_id();
+    
     {
         cout << "时刻数量: " << global::g_demand.mtime.size() << endl;
         cout << "客户端数量：" << global::g_demand.client_name.size() << endl;
@@ -151,7 +152,7 @@ int main()
                     idx_global_demand.push_back(X.idx_global_mtime);
                 }
                 solve::Solver solver(&X_results, std::move(idx_global_demand));
-                solver.solve_stream(2000);
+                solver.solve_stream(200);
             };
 
             auto rets = parallel_for(0, NUM_THREAD, task);

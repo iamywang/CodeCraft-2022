@@ -213,3 +213,11 @@ void read_qos(QOS &qos)
 
     return;
 }
+
+void set_90_quantile_server_id()
+{
+    for(int i = 0;  i < 10; i++)
+    {
+        g_90_percent_server_id_set.insert(g_site_bandwidth.bandwidth_sorted_by_bandwidth_ascending_order[i].id_server);
+    }
+}

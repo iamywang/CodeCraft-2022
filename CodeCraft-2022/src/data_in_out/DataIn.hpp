@@ -10,3 +10,6 @@ void read_demand(DEMAND &demand);
 void read_qos(QOS &qos);
 
 void read_site_bandwidth(SITE_BANDWIDTH &site_bandwidth);
+
+void set_90_quantile_server_id()
+;

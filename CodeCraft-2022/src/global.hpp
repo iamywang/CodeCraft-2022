@@ -5,6 +5,7 @@
 #include <map>
 #include <algorithm>
 #include "utils/Thread/ThreadPoll.hpp"
+#include <set>
 
 extern int g_qos_constraint;
 extern int g_minimum_cost; //最低成本
@@ -16,6 +17,7 @@ extern int g_num_server;
 #define NUM_THREAD 4
 
 extern MyUtils::Thread::ThreadPool g_thread_pool;
+extern std::set<int> g_90_percent_server_id_set;
 
 typedef struct _SITE_BANDWIDTH
 {

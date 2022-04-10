@@ -225,7 +225,7 @@ namespace optimize
                                    // flows_vec_low_limit_according_site_id,
                                    server_supported_flow,
                                    max_95_server_flow,
-                                   0.85);
+                                   0.9);
                 }
             }
 

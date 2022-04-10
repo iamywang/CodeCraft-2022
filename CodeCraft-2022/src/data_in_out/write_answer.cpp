@@ -21,6 +21,13 @@ void write_result(const std::vector<ANSWER> &X_results)
 		exit(1);
 	}
 
+	for (auto &i : g_90_percent_server_id_set)
+	{
+		fprintf(fp, "%s,", g_site_bandwidth.site_name[i].c_str());
+	}
+	fseek(fp, -1, SEEK_CUR);
+	fprintf(fp, "\r\n");
+
 	for (int time = 0; time < X_results.size(); time++)
 	{
 		auto &X = X_results[time];
