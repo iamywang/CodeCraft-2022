@@ -326,7 +326,7 @@ namespace stream_optimize
                                             flows_vec_95_according_site_id);
 
             {
-// #ifdef TEST //TODO
+#ifdef TEST //TODO TEST
                 double price_sum(0);
                 for (const auto &item : cost_vec_95_percent)
                 {
@@ -335,7 +335,7 @@ namespace stream_optimize
                 printf("price_sum: %f\n", price_sum);
                 int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
                 printf("flows: %d\n", sum);
-// #endif
+#endif
             }
 
             for (int id_max_95 = cost_vec_95_percent.size() - 1; id_max_95 >= 0; id_max_95--)

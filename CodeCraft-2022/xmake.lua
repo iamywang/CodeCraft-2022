@@ -5,7 +5,7 @@ if(is_plat("linux")) then
 else
     -- windows
     add_defines("NOMINMAX")
-    add_cflags("/wd 4819")
+    add_cxxflags("/wd 4819")
 end
 
 
@@ -18,6 +18,7 @@ target("CodeCraft-2021")
     -- set_optimize("fastest")
     if(is_mode("debug")) then
         add_defines("TEST")
+        -- add_cxxflags("-Ox")
     else
         -- add_defines("TEST")
         set_optimize("fastest")

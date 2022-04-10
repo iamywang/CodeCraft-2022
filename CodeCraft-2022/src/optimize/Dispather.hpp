@@ -204,10 +204,10 @@ namespace optimize
                                             flows_vec_95_according_site_id);
 
             {
-                // #ifdef TEST //TODO
+                #ifdef TEST //TODO TEST
                 int sum = std::accumulate(flows_vec_95_according_site_id.begin(), flows_vec_95_according_site_id.end(), 0);
                 printf("%d\n", sum);
-                // #endif
+                #endif
             }
 
             bool ret = false;

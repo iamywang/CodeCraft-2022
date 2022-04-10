@@ -12,6 +12,7 @@
 #include "DivideConquer.hpp"
 
 #define MULTI_THREAD
+#define STREAM_OPTIMIZE_DIVIDE
 // #define HEURISTIC_ALGORITHM
 
 extern void write_result(const std::vector<ANSWER> &X_results);
@@ -113,6 +114,8 @@ int main()
     write_result(*heuristic_algorithm.m_best_X_results);
 #else
     {
+
+#ifdef STREAM_OPTIMIZE_DIVIDE
         std::vector<vector<ANSWER>> X_results_vec(NUM_THREAD);
 
         {
@@ -121,7 +124,7 @@ int main()
             for (; left < X_results.size(); left += step)
             {
                 int right = left + step;
-                if(right > X_results.size())
+                if (right > X_results.size())
                     right = X_results.size();
                 auto &vec = X_results_vec[left / step];
                 for (int i = left; i < right; i++)
@@ -137,22 +140,27 @@ int main()
             }
         }
 
-        auto task = [&X_results_vec](const int i)
         {
-            auto X_results = X_results_vec[i];
-            std::vector<int> idx_global_demand;
-            for (auto &X : X_results)
+            // MyUtils::MyTimer::ProcessTimer timer;
+            auto task = [&X_results_vec](const int i)
             {
-                idx_global_demand.push_back(X.idx_global_mtime);
-            }
-            solve::Solver solver(&X_results, std::move(idx_global_demand));
-            solver.solve_stream(2000);
-        };
+                auto X_results = X_results_vec[i];
+                std::vector<int> idx_global_demand;
+                for (auto &X : X_results)
+                {
+                    idx_global_demand.push_back(X.idx_global_mtime);
+                }
+                solve::Solver solver(&X_results, std::move(idx_global_demand));
+                solver.solve_stream(2000);
+            };
 
-        auto rets = parallel_for(0, NUM_THREAD, task);
-        for (auto &ret : rets)
-        {
-            ret.get();
+            auto rets = parallel_for(0, NUM_THREAD, task);
+            for (auto &ret : rets)
+            {
+                ret.get();
+            }
+            // printf("%s %d: duration is %dms\n", __func__, __LINE__, timer.duration());
+            // exit(-1);
         }
 
         X_results.resize(0);
@@ -163,14 +171,17 @@ int main()
                 X_results.push_back(std::move(X));
             }
         }
-        std::vector<int> idx_global_demand;
-        for (auto &X : X_results)
-        {
-            idx_global_demand.push_back(X.idx_global_mtime);
-        }
-        solve::Solver solver(&X_results, std::move(idx_global_demand));
-        solver.solve_stream(10000);
+
+#endif
     }
+
+    std::vector<int> idx_global_demand;
+    for (auto &X : X_results)
+    {
+        idx_global_demand.push_back(X.idx_global_mtime);
+    }
+    solve::Solver solver(&X_results, std::move(idx_global_demand));
+    solver.solve_stream(10000);
 
     write_result(X_results);
     printf("%s %d, best price is %d\n", __func__, __LINE__, Verifier::calculate_price(X_results));
