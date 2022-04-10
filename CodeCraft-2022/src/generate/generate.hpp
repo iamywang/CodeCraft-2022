@@ -116,12 +116,12 @@ namespace generate
                         if (g_site_bandwidth.bandwidth[site_id] - left_bandwidth[site_id] + flow < quantile_flow[site_id])
                         {
                             int new_flow = quantile_flow[site_id] - g_site_bandwidth.bandwidth[site_id] + left_bandwidth[site_id];
-                            flow = max(flow, int(new_flow * 1));
+                            flow = max(flow, new_flow);
                         }
 
                         if (stream_client_demand <= flow)
                         {
-                            if (double(stream_client_demand) / double(flow) > match_percent)
+                            if (flow > 0 && double(stream_client_demand) / double(flow) > match_percent)
                             {
                                 match_percent = double(stream_client_demand) / double(flow);
                                 most_match_site_id = site_id;
@@ -157,22 +157,23 @@ namespace generate
                             const int left = left_bandwidth[site_id];
                             if (stream_client_demand <= left)
                             {
-                                if (quantile_flow[site_id] == 0)
-                                {
-                                    if (double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]) < match_zero_percent || match_percent == 0)
+                                if (g_site_bandwidth.bandwidth[site_id] > 0)
+                                    if (quantile_flow[site_id] == 0)
                                     {
-                                        match_zero_percent = double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]);
-                                        most_match_zero_site_id = site_id;
+                                        if (double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]) < match_zero_percent || match_percent == 0)
+                                        {
+                                            match_zero_percent = double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]);
+                                            most_match_zero_site_id = site_id;
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    if (double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]) < match_over_percent || match_percent == 0)
+                                    else
                                     {
-                                        match_over_percent = double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]);
-                                        most_match_over_site_id = site_id;
+                                        if (double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]) < match_over_percent || match_percent == 0)
+                                        {
+                                            match_over_percent = double(stream_client_demand) / double(g_site_bandwidth.bandwidth[site_id]);
+                                            most_match_over_site_id = site_id;
+                                        }
                                     }
-                                }
                             }
                         }
 
@@ -266,9 +267,9 @@ namespace generate
         {
             int num_mutate = int(rate * X_results.size());
             static std::vector<int> s_mutax_time_index;
-            if(s_mutax_time_index.size() < X_results.size())
+            if (s_mutax_time_index.size() < X_results.size())
             {
-                for(int i = s_mutax_time_index.size(); i < X_results.size(); i++)
+                for (int i = s_mutax_time_index.size(); i < X_results.size(); i++)
                 {
                     s_mutax_time_index.push_back(i);
                 }

@@ -16,6 +16,7 @@
 #include "ResultGenerator.hpp"
 #include "solve_utils.hpp"
 #include "XSolver.hpp"
+#include "XSolver2.hpp"
 
 using namespace std;
 
@@ -29,21 +30,26 @@ namespace solve
         ResultGenerator *m_result_generator;
 
     public:
-        Solver(std::vector<ANSWER>* X_results,
+        Solver(std::vector<ANSWER> *X_results,
                //    const DEMAND &demand,
                std::vector<int> &&idx_global_demand) : m_common_data(
                                                            //    demand,
                                                            X_results, std::move(idx_global_demand))
         {
-            m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm(m_common_data);
+            m_result_generator = (ResultGenerator *)new XSolverGreedyAlgorithm2(m_common_data);
             // m_result_generator = (ResultGenerator *)new XSolverMaxFlow(m_common_data);
         }
         ~Solver() { delete m_result_generator; }
 
-        void reset(std::vector<ANSWER>* X_results)
+        void reset(std::vector<ANSWER> *X_results)
         {
             m_common_data.m_X_results = X_results;
             // m_result_generator->reset(m_common_data);// 这个先不管了，在实际运行过程中不会出现再次初始化解的情况
+        }
+
+        void generate_X_results()
+        {
+            m_result_generator->generate_initial_X_results();
         }
 
         int solve(const int num_iteration, const bool is_generate_initial_results)
@@ -56,7 +62,8 @@ namespace solve
 
             if (is_generate_initial_results)
             {
-                m_result_generator->generate_initial_X_results();
+                // m_result_generator->generate_initial_X_results();
+                generate_X_results();
             }
 
             //根据时间对X_results进行排序

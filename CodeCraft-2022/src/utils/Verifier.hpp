@@ -33,16 +33,25 @@ public:
             }
         }
 
+        std::vector<double> costs_vec(m_current_mtime_count, 0);
         {
             // for (auto &v : costs)
             // {
             //     //从小到大排序
             //     std::sort(v.begin(), v.end());
             // }
-            auto task = [&costs, m_95_quantile_idx](int id_server)
-            { nth_element(costs[id_server].begin(),
-                          costs[id_server].begin() + m_95_quantile_idx,
-                          costs[id_server].end()); };
+            auto task = [&costs_vec, &costs, m_95_quantile_idx, m_current_mtime_count](int id_server)
+            {
+                int quantile_idx = m_95_quantile_idx;
+                if(g_90_percent_server_id_set.find(id_server) != g_90_percent_server_id_set.end())
+                {
+                    quantile_idx = calculate_quantile_index(0.9, m_current_mtime_count);
+                }
+                nth_element(costs[id_server].begin(),
+                            costs[id_server].begin() + quantile_idx,
+                            costs[id_server].end());
+                costs_vec[id_server] = costs[id_server][quantile_idx];
+            };
             auto rets = parallel_for(0, costs.size(), task);
             for (auto &i : rets)
             {
@@ -53,7 +62,7 @@ public:
         double sum = 0;
         for (int i = 0; i < g_num_server; i++)
         {
-            sum += costs[i][m_95_quantile_idx];
+            sum += costs_vec[i];
         }
         return sum;
     }

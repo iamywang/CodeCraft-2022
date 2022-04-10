@@ -68,11 +68,11 @@ public:
                 for (int i = mid + 1 - left; i <= right - left; ++i)
                 // for (int i = mid + 1; i <= right; ++i)
                 {
-                    if (i >= X_results.size())
-                    {
-                        throw runtime_error("i >= X_results.size()");
-                        exit(-1);
-                    }
+                    // if (i >= X_results.size())
+                    // {
+                    //     throw runtime_error("i >= X_results.size()");
+                    //     exit(-1);
+                    // }
                     X_results_right.push_back(std::move(X_results[i]));
                 }
                 X_results.resize(mid - left + 1);

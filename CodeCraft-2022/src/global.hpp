@@ -70,7 +70,7 @@ public:
      * @param time
      * @return int
      */
-    int get(const std::string &time) 
+    int get(const std::string &time)
     {
         int ret = mtime_2_id[time];
         return ret;
@@ -131,8 +131,8 @@ typedef struct _ANSWER
     std::vector<int> sum_flow_site;                 //各个服务器的实际总流量
     std::vector<double> cost;                       //各个服务器的成本
 
-    _ANSWER(){}
-    _ANSWER(_ANSWER&& rhs)
+    _ANSWER() {}
+    _ANSWER(_ANSWER &&rhs)
     {
         idx_global_mtime = rhs.idx_global_mtime;
         flow = std::move(rhs.flow);
@@ -140,7 +140,7 @@ typedef struct _ANSWER
         sum_flow_site = std::move(rhs.sum_flow_site);
         cost = std::move(rhs.cost);
     }
-    _ANSWER& operator=(_ANSWER&& rhs)
+    _ANSWER &operator=(_ANSWER &&rhs)
     {
         idx_global_mtime = rhs.idx_global_mtime;
         flow = std::move(rhs.flow);
@@ -149,7 +149,7 @@ typedef struct _ANSWER
         cost = std::move(rhs.cost);
         return *this;
     }
-    _ANSWER(const _ANSWER& rhs)
+    _ANSWER(const _ANSWER &rhs)
     {
         idx_global_mtime = rhs.idx_global_mtime;
         flow = rhs.flow;
@@ -157,7 +157,7 @@ typedef struct _ANSWER
         sum_flow_site = rhs.sum_flow_site;
         cost = rhs.cost;
     }
-    _ANSWER& operator=(const _ANSWER& rhs)
+    _ANSWER &operator=(const _ANSWER &rhs)
     {
         idx_global_mtime = rhs.idx_global_mtime;
         flow = rhs.flow;
@@ -170,8 +170,8 @@ typedef struct _ANSWER
 
     /**
      * @brief 只允许在初始化ANSWER时使用一次
-     * 
-     * @param num_stream 
+     *
+     * @param num_stream
      */
     void init(const int num_stream)
     {
@@ -198,17 +198,19 @@ typedef struct _ANSWER
      */
     inline void set(const int id_stream, const int id_client, const int id_server)
     {
-        // const int demand_tmp = global::g_demand.stream_client_demand[idx_global_mtime].stream_2_client_demand[id_stream][id_client];
-        // if (stream2server_id[id_stream][id_client] != -1) //如果已经指定了服务器
-        // {
-            // int id = stream2server_id[id_stream][id_client];
-            // sum_flow_site[id] -= demand_tmp;
-            // cost[id] = calculate_cost(id, sum_flow_site[id]);
-        // }
+        const int demand_tmp = global::g_demand.stream_client_demand[idx_global_mtime].stream_2_client_demand[id_stream][id_client];
+        if (stream2server_id[id_stream][id_client] != -1) //如果已经指定了服务器
+        {
+            int id = stream2server_id[id_stream][id_client];
+            sum_flow_site[id] -= demand_tmp;
+            this->flow[id_client][id] -= demand_tmp;
+            cost[id] = calculate_cost(id, sum_flow_site[id]);
+        }
 
         stream2server_id[id_stream][id_client] = id_server;
-        // sum_flow_site[id_server] += demand_tmp;
-        // cost[id_server] = calculate_cost(id_server, sum_flow_site[id_server]);
+        sum_flow_site[id_server] += demand_tmp;
+        cost[id_server] = calculate_cost(id_server, sum_flow_site[id_server]);
+        this->flow[id_client][id_server] += demand_tmp;
     }
 
     /**
